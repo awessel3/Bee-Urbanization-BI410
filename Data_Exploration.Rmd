@@ -1,0 +1,26 @@
+---
+title: "Bee_Urbanization_Project"
+output: html_document
+date: "2024-11-07"
+---
+
+## Data Exploration
+
+
+``` {r}
+library(tidyverse)
+
+bee_data <- read.csv("OBA_2018-2023_combined_dataset_working.csv")
+
+head(bee_data)
+#colnames(bee_data)
+#unique(bee_data$Species)
+
+vosenesenskii <- bee_data[bee_data$Species == "vosnesenskii", ]
+lignaria <- bee_data[bee_data$Species == "lignaria", ]
+
+# melissodes and/or bimaculatus doesn't seem to have any observations
+  # melissodes <-  bee_data[bee_data$Species == "melissodes", ]
+
+
+```
