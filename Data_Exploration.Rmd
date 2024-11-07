@@ -9,6 +9,7 @@ date: "2024-11-07"
 
 ``` {r}
 library(tidyverse)
+setwd("~/Bee-Urbanization-BI41")
 
 bee_data <- read.csv("OBA_2018-2023_combined_dataset_working.csv")
 
