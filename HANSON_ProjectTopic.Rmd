@@ -1,0 +1,31 @@
+---
+title: "HANSON_ProjectTopic.Rmd"
+output: html_document
+date: "2024-10-24"
+---
+
+
+- General topic of interest in relation to the Oregon Bee Atlas data (e.g., patterns of diversity, bee diets, sampling bias)
+  
+  The impact of urbanization on bee presence
+  Phenology
+
+- Potential questions within that topic area
+
+  What is the effect of urbanization on bee species' distribution and phenology?
+    
+  Specifically how many occurrences of bees do we see in more vs less urbanized areas?
+    Does this differ when looking at different bee species?
+  How does urbanization affect climate, and how is this affecting bee phenology?
+  
+- Potential additional datasets within that topic area (e.g.,specify relevant government databases, academic data repositories, etc)
+
+  Potential additional datasets we could use are the 2020 Census Urban Areas Wall Map or the US Energy Atlas USA Urban Areas map/acrgis site.
+  US Census Data - the population could be used as a measure of urbanization or Urban land cover
+
+- The name of your partner (if undergrads)
+Ava Wessel
+
+- The name of your partner, and what parts of this assignment they contributed to, and what parts they wrote. 
+  Ava contributed to the brainstorming the general topics of interest, the potential questions regarding bee phenology, and potential additional datasets.
+  
