@@ -29,13 +29,7 @@ Hypotheses/questions --
 List these clearly and in a logical order
 Make hypotheses directionally using predictions (e.g. “I predict urbanization will reduce plant diversity” rather than “I predict urbanization will change plant diversity”)
 
-Research Question: How does peak emergence, for Bombus vosnesenskii and Bombus melanopygus, vary along climatic and urbanization gradients?
-
-Hypothesis 1: Urbanization will delay the peak emergence of Bombus vosnesenskii and Bombus melanopygus, and there will be higher variability in emergence in urban areas due to the presence of different landscapes within urban areas.
-
-Hypothesis 2: Areas that have higher mean temperatures will show earlier emergence times. 
-
-Hypothesis 3: Urbanization and climate will have compounded effects, showing earlier emergence in urban areas with higher mean temperatures. 
+Our research question is: How does peak emergence, for Bombus vosnesenskii and Bombus melanopygus, vary along climatic and urbanization gradients? Our first hypothesis is that urbanization will delay the peak emergence of Bombus vosnesenskii and Bombus melanopygus, and there will be higher variability in emergence in urban areas due to the presence of different landscapes within urban areas. Our second hypothesis is that areas that have higher mean temperatures will show earlier emergence times. Our third hypothesis is that urbanization and climate will have compounded effects, showing earlier emergence in urban areas with higher mean temperatures. 
 
 
 
