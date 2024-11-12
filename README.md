@@ -22,10 +22,20 @@ Purpose of the study--
 Further refine your approach (e.g., what data will you combine, how will you address the question)
 Justify why this is needed now (e.g., visualization to test a new dimension of the question or better convey an old one)
 
+The data that we will be combining is the OBA dataset and merging it with census data to get whether that bee observation was in a rural or urban area. We would do the same thing with the PRISM data, merging each of the bee observations with temperature, likely joining on latitude and longitude in order to see what the average temperature is in the area the bee was recorded.  Broadly, we will address the question of how does peak emergence vary with urbanization and average climate, by adding a column of data to each of the bee observations (a column for climate and a column for urbanization) and seeing if there are patterns based on how urban a place is or how warm/cold a place’s climate is. This is needed now because past studies have been able to look at bee emergence in other regions of the US or in other countries, but few studies have combined looking at the emergence of these particular species, Bombus vosnesenskii and Bombus melanopygus, in conjunction with the urbanization and climate gradients present in Oregon. Urbanization and climate change are rapidly changing natural landscapes with effects on pollinators that are not fully understood. Carrying out these analyses and creating visualizations can reveal important insights on pollinator health and adaptability.
+
+
 Hypotheses/questions --
 List these clearly and in a logical order
 Make hypotheses directionally using predictions (e.g. “I predict urbanization will reduce plant diversity” rather than “I predict urbanization will change plant diversity”)
 
+Research Question: How does peak emergence, for Bombus vosnesenskii and Bombus melanopygus, vary along climatic and urbanization gradients?
+
+Hypothesis 1: Urbanization will delay the peak emergence of Bombus vosnesenskii and Bombus melanopygus, and there will be higher variability in emergence in urban areas due to the presence of different landscapes within urban areas.
+
+Hypothesis 2: Areas that have higher mean temperatures will show earlier emergence times. 
+
+Hypothesis 3: Urbanization and climate will have compounded effects, showing earlier emergence in urban areas with higher mean temperatures. 
 
 
 
