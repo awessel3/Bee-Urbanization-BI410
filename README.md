@@ -62,7 +62,7 @@ US Census Bureau
 2020 Census - Census Block Maps, Census Urban-Rural, Census Population Data
 https://www.census.gov/geographies/reference-maps/2020/geo/2020-census-block-maps.html 
 
-	The US Census Bureau collected the data and the data was collected through the 2020 census which used household surveys to collect demographic, social, and housing data. The key columns we will be looking at include population sizes and county boundaries. 
+The US Census Bureau collected the data and the data was collected through the 2020 census which used household surveys to collect demographic, social, and housing data. The key columns we will be looking at include population sizes and county boundaries. 
 
 Multi-Resolution Land Characteristics Consortium (MRLC)
 North American Land Cover 2020
@@ -73,7 +73,7 @@ This data was collected by the MRLC and is based on Landsat satellite imagery of
 PRISM Climate Data 
 https://prism.oregonstate.edu/ 
 
-	Oregon State University and the PRISM Climate Group collected this data. It was collected from a network of weather stations and interpolated to account for geographic and topographic variation. The key columns include date, mean temperature (°C), precipitation (mm), latitude and longitude, and elevation (m).
+Oregon State University and the PRISM Climate Group collected this data. It was collected from a network of weather stations and interpolated to account for geographic and topographic variation. The key columns include date, mean temperature (°C), precipitation (mm), latitude and longitude, and elevation (m).
 
 
 
