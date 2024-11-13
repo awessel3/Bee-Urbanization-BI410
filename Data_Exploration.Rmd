@@ -19,9 +19,8 @@ head(bee_data)
 
 vosenesenskii <- bee_data[bee_data$Species == "vosnesenskii", ]
 lignaria <- bee_data[bee_data$Species == "lignaria", ]
+melanopygus <- bee_data[bee_data$Species == "melanopygus",]
 
 # melissodes and/or bimaculatus doesn't seem to have any observations
   # melissodes <-  bee_data[bee_data$Species == "melissodes", ]
-
-
 ```
