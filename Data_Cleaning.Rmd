@@ -68,6 +68,7 @@ filtered_bee_data <- mutate(filtered_bee_data, DOY = calc_day_of_year(Collection
 # row 8791 has Collection.Date of 2018--20
   # dropping this row 
 # row 18851 had Collection.Date of 2019-6-31, this day doesn't exist allegedly there are only 30 days in june
+# the rest of the rows without a DOY value don't have a Collection.Date date
 
 #dropping all days missing a DOy value? Which is ~740 values 
 
