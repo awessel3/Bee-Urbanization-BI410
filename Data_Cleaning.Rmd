@@ -19,8 +19,8 @@ head(bee_data)
 #colnames(bee_data)
 #unique(bee_data$Species)
 
-vosenesenskii <- bee_data[bee_data$Species == "vosnesenskii", ]
-melanopygus <- bee_data[bee_data$Species == "melanopygus",]
+#vosenesenskii <- bee_data[bee_data$Species == "vosnesenskii", ]
+#melanopygus <- bee_data[bee_data$Species == "melanopygus",]
 
 # want to just keep our species from the main dataframe
 filtered_bee_data <- bee_data[bee_data$Species %in% c("vosnesenskii", "melanopygus"), ]
@@ -34,12 +34,12 @@ filtered_bee_data <- filtered_bee_data %>%
 head(filtered_bee_data)
 
 # exploring what rows have na values 
-rows_with_na <- rowSums(is.na(filtered_bee_data)) > 0
+#rows_with_na <- rowSums(is.na(filtered_bee_data)) > 0
 # Display rows with NA
-filtered_bee_data[rows_with_na, ]
+#filtered_bee_data[rows_with_na, ]
 
-# removing these rows 
-na.omit(filtered_bee_data)
+# removing these na rows 
+filtered_bee_data <- na.omit(filtered_bee_data)
 ```
 
 # creating a day of year column
@@ -48,7 +48,29 @@ na.omit(filtered_bee_data)
 
   # using lubridate
 
+calc_day_of_year <- function(date){
+  
+  # converting the string object to a Date object
+  # parses mm/dd/yyyy
+  date <- mdy(date) 
+  
+  # get day of year
+  day_of_year <- yday(date)
+  
+  return (day_of_year)
+  
+}
 
+filtered_bee_data <- mutate(filtered_bee_data, DOY = calc_day_of_year(Collection.Date))
 
+#rows_with_na <- rowSums(is.na(filtered_bee_data)) > 0
+#filtered_bee_data[rows_with_na, ]
+# row 8791 has Collection.Date of 2018--20
+  # dropping this row 
+# row 18851 had Collection.Date of 2019-6-31, this day doesn't exist allegedly there are only 30 days in june
+
+#dropping all days missing a DOy value? Which is ~740 values 
+
+filtered_bee_data <- na.omit(filtered_bee_data)
 
 ```
