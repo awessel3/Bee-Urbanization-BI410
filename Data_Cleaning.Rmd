@@ -75,3 +75,12 @@ filtered_bee_data <- mutate(filtered_bee_data, DOY = calc_day_of_year(Collection
 filtered_bee_data <- na.omit(filtered_bee_data)
 
 ```
+
+```{r}
+
+census <- read.csv("CensusBlockGroups.csv")
+
+# want to keep columns INTPTLAT, INTPTLON, COUNTY?, NAME?, POP20
+
+
+```
