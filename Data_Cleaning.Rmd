@@ -11,7 +11,10 @@ date: "2024-11-07"
 #install.packages("lubridate")\
 library(lubridate)
 library(tidyverse)
-setwd("~/Bee-Urbanization-BI41")
+library(sp)
+library(raster)
+library(prism)
+setwd("~/Bee-Urbanization-BI410")
 
 bee_data <- read.csv("OBA_2018-2023_combined_dataset_working.csv")
 
@@ -29,7 +32,7 @@ colnames(filtered_bee_data)
 # want to keep Dec..Lat. and Dec..Long. and Collection.Date and Collection.Day.1
 # https://stackoverflow.com/questions/50990412/select-remove-columns-under-conditions-in-dplyr-filter-columns-r
 filtered_bee_data <- filtered_bee_data %>%
-    select(Dec..Lat., Dec..Long., Collection.Date, Species, Year.1)
+    dplyr::select(Dec..Lat., Dec..Long., Collection.Date, Species, Year.1)
  
 head(filtered_bee_data)
 
@@ -72,9 +75,107 @@ filtered_bee_data <- mutate(filtered_bee_data, DOY = calc_day_of_year(Collection
 
 #dropping all days missing a DOy value? Which is ~740 values 
 
+month <- seq(as.Date("2020-01-01"), 
+             as.Date("2020-12-01"), 
+             by = "1 month")
+month_label <- lubridate::month(month, label = TRUE)
+
+winter.months <- seq(as.Date("2020-09-01"), 
+                     as.Date("2021-08-01"), 
+                     by = "1 month")
+winter.month_label <- lubridate::month(winter.months, label = TRUE)
+
+filtered_bee_data <- filtered_bee_data %>%
+  mutate(Collection.Date=mdy(Collection.Date)
+         ,year=as.numeric(year(Collection.Date))
+         ,month=month(Collection.Date)
+         ,doy = yday(Collection.Date)
+  ) %>%
+  arrange(year,doy) 
+
+filtered_bee_data <- filtered_bee_data %>% rename(latitude = Dec..Lat., longitude = Dec..Long.)
+
+filtered_bee_data <- mutate(filtered_bee_data,
+                 winter.year = ifelse(month>8, year+1, year)
+                 ,winter.month = ifelse(month>8, month-8, month+4)
+                 ,winter.day = ifelse(month>8, doy-243, doy+120)
+)
+
+
+
 filtered_bee_data <- na.omit(filtered_bee_data)
+dim(filtered_bee_data)
 
 ```
+
+
+```{r}
+#Adding PRISM Data 
+
+prism_set_dl_dir("prism_data")
+
+get_prism_monthlys(
+  type = "tmean", 
+  year=2016:2021,
+  mon=1:12,
+  keepZip = FALSE
+)
+
+sub.tmean <- prism_archive_subset("tmean", "monthly", mon = 1:12)
+
+RS <- pd_stack(sub.tmean) ##raster file   # (prism_stack and ls_prism_data deprecated)
+
+bee.test <- filtered_bee_data
+bee.spdf <-   SpatialPointsDataFrame(coords=bee.test[,c('longitude','latitude')], 
+                                    data=bee.test, proj4string = CRS("+proj=longlat +ellps=WGS84 +no_defs"))
+
+bee.clim <- extract(RS, bee.spdf,  fun=mean, na.rm=TRUE, sp=TRUE) 
+bee.clim <- as.data.frame(bee.clim)
+head(bee.clim,2); dim(bee.clim)
+
+
+bee_long <- pivot_longer(bee.clim, cols=starts_with("PRISM")) %>%
+  separate(col=name, sep="_", into=c("r1","var","class","res","dd","r2")) %>%
+  mutate(year.prism=as.numeric(str_sub(dd, 1, 4)),
+         month.prism=as.numeric(str_sub(dd, 5, 6)))%>%
+  dplyr::select(-c(r1,r2,latitude.1, longitude.1, dd))
+print(bee_long)
+
+bee_long <- bee_long %>%  
+  mutate(winter.year.prism = ifelse(month.prism>8, year.prism+1, year.prism)
+         ,winter.month.prism = ifelse(month.prism>8, month.prism-8, month.prism+4)
+         ,tmean.month = paste(var, winter.month.prism, sep="_")
+  )%>%
+  filter(winter.year.prism == winter.year) # filter to only the prism data from the same winter-year as the observation
+print(bee_long)
+
+bee_long <- bee_long %>% 
+  dplyr::select(-c(month.prism,winter.month.prism, year.prism,class))%>% 
+  print(bee_long)
+
+# pivot back to wide
+bee.dat.tmean <- pivot_wider(bee_long, names_from=tmean.month, 
+                             values_from=value, values_fn = mean) %>%
+  dplyr::select(-c(var))
+print(bee.dat.tmean)
+
+bee.data <- bee.dat.tmean
+print(bee.data)
+
+bee_data_wTemp <-  bee.data %>%
+  rowwise()%>%
+  mutate(temp=mean(c_across(tmean_1:tmean_9)))
+
+
+head(bee_data_wTemp) #tmean is set up with september being the 1st month currently, capturing weather before current spring year. 
+
+sum(is.na(bee_data_wTemp)) 
+dim(bee_data_wTemp)
+dim(filtered_bee_data) #large difference in row numbers, why? 
+
+
+```
+
 
 ```{r}
 
