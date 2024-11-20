@@ -145,8 +145,8 @@ bee_long <- bee_long %>%
   mutate(winter.year.prism = ifelse(month.prism>8, year.prism+1, year.prism)
          ,winter.month.prism = ifelse(month.prism>8, month.prism-8, month.prism+4)
          ,tmean.month = paste(var, winter.month.prism, sep="_")
-  )%>%
-  filter(winter.year.prism == winter.year) # filter to only the prism data from the same winter-year as the observation
+  )
+ filter(winter.year.prism == winter.year) # filter to only the prism data from the same winter-year as the observation
 print(bee_long)
 
 bee_long <- bee_long %>% 
@@ -172,6 +172,13 @@ head(bee_data_wTemp) #tmean is set up with september being the 1st month current
 sum(is.na(bee_data_wTemp)) 
 dim(bee_data_wTemp)
 dim(filtered_bee_data) #large difference in row numbers, why? 
+
+dim(filtered_bee_data)
+dim(bee.spdf)
+dim(bee.clim)
+dim(bee_long)
+dim(bee.dat.tmean)
+dim(bee_data_wTemp)
 
 
 ```
