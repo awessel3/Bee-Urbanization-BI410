@@ -22,29 +22,32 @@ complete_bee_data <- read_rds("Data/final_bee_dataset")
 ## Adding urbanization levels 
 
 ```{r}
+head(complete_bee_data)
+# using quantile function and POP20
+  # if in quantile 1, give it a number 1
+  # if in quantile 2, assign it to number 2 etc 
+assign_urbanization_level <- function(data){
+  
+  quantile_1 = quantile(data$POP20, na.rm = TRUE)[1]
+  quantile_2 = quantile(data$POP20, na.rm = TRUE)[2]
+  quantile_3 = quantile(data$POP20, na.rm = TRUE)[3]
+  quantile_4 = quantile(data$POP20, na.rm = TRUE)[4]
+  quantile_5 = quantile(data$POP20, na.rm = TRUE)[5]
+}
+
+  # splitting POP20 into 4 even? categories
+complete_bee_data <- complete_bee_data %>%
+  mutate(urbanization_level = sapply(complete_bee_data$POP20, quantile(complete_bee_data$POP20, na.rm = TRUE))) 
+
+if complete_bee_data$POP20 < quantile(complete_bee_data$POP20, na.rm =TRUE)
+
+quantile_5 = quantile(complete_bee_data$POP20, na.rm = TRUE)[5]
 
 ```
 
 ## 
 
 ```{r}
-complete_bee_data <- complete_bee_data %>%
-  rowwise() %>%
-  mutate(springTemp = mean(c_across(c("tmean_6", "tmean_7", 
-                                      "tmean_8", "tmean_9", "tmean_10")), na.rm = TRUE)) %>%
-  ungroup()
-
-dat <- data.frame(
-  DOY = complete_bee_data$DOY,
-  springTemp = complete_bee_data$springTemp,
-  urbanizationLevel = complete_bee_data$urbanization_level,
-  species = complete_bee_data$Species,
-)
-
-
-formula <- DOY ~ 1 + urbanizationLevel + springTemp + (species | 1)
-
-model1 <- lmer(formula, data = dat)
 
 ```
 
