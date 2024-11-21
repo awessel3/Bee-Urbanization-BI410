@@ -203,7 +203,7 @@ bee_sf <- st_as_sf(filtered_bee_data,
                         crs = crs("EPSG:4326"))
 census_sf <- st_cast(census_sf, "POLYGON")
 
-block_bee_intersect <- st_intersects(bee_sf, census_sf, sparse = FALSE)
+bee_with_census <- st_join(bee_sf, census_sf)
 
 
 
