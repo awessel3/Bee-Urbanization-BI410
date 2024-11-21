@@ -12,8 +12,10 @@ date: "2024-11-07"
 library(lubridate)
 library(tidyverse)
 library(sp)
+library(sf)
 library(raster)
 library(prism)
+library(terra)
 setwd("~/Bee-Urbanization-BI410")
 
 bee_data <- read.csv("OBA_2018-2023_combined_dataset_working.csv")
@@ -187,6 +189,23 @@ dim(bee_data_wTemp)
 ```{r}
 
 census <- read.csv("CensusBlockGroups.csv")
+
+census_shp <- st_read("Data/CensusBlockGroups/CensusBlockGroups.shp")
+
+census_sf <- census_shp %>% 
+  st_transform(crs = "EPSG:4326") %>% 
+  rename(latitude = INTPTLAT, longitude = INTPTLON) %>% 
+  dplyr::select(latitude, longitude, geometry, POP20, POPDENS20, COUNTY)
+  
+
+bee_sf <- st_as_sf(filtered_bee_data,
+                        coords = c("longitude", "latitude"),
+                        crs = crs("EPSG:4326"))
+census_sf <- st_cast(census_sf, "POLYGON")
+
+block_bee_intersect <- st_intersects(bee_sf, census_sf, sparse = FALSE)
+
+
 
 # want to keep columns INTPTLAT, INTPTLON, COUNTY?, NAME?, POP20
 
