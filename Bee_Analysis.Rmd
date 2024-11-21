@@ -5,7 +5,18 @@ date: "2024-11-21"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+library(lubridate)
+library(tidyverse)
+library(sp)
+library(sf)
+library(raster)
+library(prism)
+library(terra)
+library(lme4)
+library(lmerTest)
+setwd("~/Bee-Urbanization-BI410")
+
+complete_bee_data <- read_rds("Data/final_bee_dataset")
 ```
 
 ## R Markdown
