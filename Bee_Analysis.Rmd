@@ -43,6 +43,21 @@ if complete_bee_data$POP20 < quantile(complete_bee_data$POP20, na.rm =TRUE)
 
 quantile_5 = quantile(complete_bee_data$POP20, na.rm = TRUE)[5]
 
+
+assign_urbanization_level <- function(data) {
+  quantiles <- quantile(data$POP20, probs = seq(0 , 1, 0.25), na.rm = TRUE)
+  
+  data <- data %>% 
+    mutate(urbanization_level = cut(POP20,
+                                    breaks = quantiles,
+                                    labels = c("rural", "subrural", "suburban", "urban"),
+                                    include.lowest = TRUE))
+  
+  return(data)
+}
+
+complete_bee_data <- assign_urbanization_level(complete_bee_data)
+
 ```
 
 ## 
