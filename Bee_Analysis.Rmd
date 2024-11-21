@@ -56,6 +56,7 @@ assign_urbanization_level <- function(data) {
   return(data)
 }
 
+
 complete_bee_data <- assign_urbanization_level(complete_bee_data)
 
 ```
@@ -74,12 +75,20 @@ dat <- data.frame(
   springTemp = complete_bee_data$springTemp,
   urbanizationLevel = complete_bee_data$urbanization_level,
   species = complete_bee_data$Species,
+  pop_density = scale(complete_bee_data$POP20)
 )
+na.omit(dat)
+sum(is.na(dat))
+dat$springTemp <- as.numeric(dat$springTemp)
 
 
-formula <- DOY ~ 1 + urbanizationLevel + springTemp + (species | 1)
+
+formula <- DOY ~ 1 + urbanizationLevel + springTemp + pop_density + (1 | species)
 
 model1 <- lmer(formula, data = dat)
+
+summary(model1)
+step(model1)
 
 ```
 
