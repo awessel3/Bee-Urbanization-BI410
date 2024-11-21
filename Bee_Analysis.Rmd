@@ -48,6 +48,23 @@ quantile_5 = quantile(complete_bee_data$POP20, na.rm = TRUE)[5]
 ## 
 
 ```{r}
+complete_bee_data <- complete_bee_data %>%
+  rowwise() %>%
+  mutate(springTemp = mean(c_across(c("tmean_6", "tmean_7", 
+                                      "tmean_8", "tmean_9", "tmean_10")), na.rm = TRUE)) %>%
+  ungroup()
+
+dat <- data.frame(
+  DOY = complete_bee_data$DOY,
+  springTemp = complete_bee_data$springTemp,
+  urbanizationLevel = complete_bee_data$urbanization_level,
+  species = complete_bee_data$Species,
+)
+
+
+formula <- DOY ~ 1 + urbanizationLevel + springTemp + (species | 1)
+
+model1 <- lmer(formula, data = dat)
 
 ```
 
