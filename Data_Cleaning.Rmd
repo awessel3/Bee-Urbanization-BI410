@@ -142,14 +142,15 @@ bee_long <- pivot_longer(bee.clim, cols=starts_with("PRISM")) %>%
          month.prism=as.numeric(str_sub(dd, 5, 6)))%>%
   dplyr::select(-c(r1,r2,latitude.1, longitude.1, dd))
 print(bee_long)
+dim(bee_long)
 
 bee_long <- bee_long %>%  
   mutate(winter.year.prism = ifelse(month.prism>8, year.prism+1, year.prism)
          ,winter.month.prism = ifelse(month.prism>8, month.prism-8, month.prism+4)
          ,tmean.month = paste(var, winter.month.prism, sep="_")
-  )
- filter(winter.year.prism == winter.year) # filter to only the prism data from the same winter-year as the observation
+  ) %>% filter(winter.year.prism == winter.year) # filter to only the prism data from the same winter-year as the observation
 print(bee_long)
+dim(bee_long)
 
 bee_long <- bee_long %>% 
   dplyr::select(-c(month.prism,winter.month.prism, year.prism,class))%>% 
@@ -160,6 +161,7 @@ bee.dat.tmean <- pivot_wider(bee_long, names_from=tmean.month,
                              values_from=value, values_fn = mean) %>%
   dplyr::select(-c(var))
 print(bee.dat.tmean)
+dim(bee.dat.tmean)
 
 bee.data <- bee.dat.tmean
 print(bee.data)
@@ -198,15 +200,15 @@ census_sf <- census_shp %>%
   dplyr::select(latitude, longitude, geometry, POP20, POPDENS20, COUNTY)
   
 
-bee_sf <- st_as_sf(filtered_bee_data,
+bee_sf <- st_as_sf(bee_data_wTemp,
                         coords = c("longitude", "latitude"),
                         crs = crs("EPSG:4326"))
 census_sf <- st_cast(census_sf, "POLYGON")
 
 bee_with_census <- st_join(bee_sf, census_sf)
+dim(bee_with_census)
 
-
-
+saveRDS(bee_with_census, "Data/final_bee_dataset")
 # want to keep columns INTPTLAT, INTPTLON, COUNTY?, NAME?, POP20
 
 
