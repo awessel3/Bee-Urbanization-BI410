@@ -14,6 +14,7 @@ library(prism)
 library(terra)
 library(lme4)
 library(lmerTest)
+library(car)
 setwd("~/Bee-Urbanization-BI410")
 
 complete_bee_data <- read_rds("Data/final_bee_dataset")
@@ -84,6 +85,8 @@ model1 <- lmer(formula, data = dat)
 
 summary(model1)
 step(model1)
+
+vif(model1)
 
 ```
 
