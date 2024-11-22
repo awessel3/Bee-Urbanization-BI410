@@ -29,14 +29,32 @@ head(complete_bee_data)
   # if in quantile 2, assign it to number 2 etc 
 assign_urbanization_level <- function(data){
   
-  quantile_1 = quantile(data$POP20, na.rm = TRUE)[1]
-  quantile_2 = quantile(data$POP20, na.rm = TRUE)[2]
-  quantile_3 = quantile(data$POP20, na.rm = TRUE)[3]
-  quantile_4 = quantile(data$POP20, na.rm = TRUE)[4]
-  quantile_5 = quantile(data$POP20, na.rm = TRUE)[5]
+  # initialize a list
+  urbanization_level <- list(nrow(data))
+
+  quantile_1 <- quantile(data$POP20, na.rm = TRUE)[1]
+  quantile_2 <- quantile(data$POP20, na.rm = TRUE)[2]
+  quantile_3 <- quantile(data$POP20, na.rm = TRUE)[3]
+  quantile_4 <- quantile(data$POP20, na.rm = TRUE)[4]
+  quantile_5 <- quantile(data$POP20, na.rm = TRUE)[5]
+  
+  for (i in 1:nrow(data)){
+    if (quantile_1 <= (complete_bee_data$POP20[i]) && (complete_bee_data$POP20[i]) <= quantile_2){
+      append(urbanization_level, 1)
+    }
+    else if (quantile_2 < (complete_bee_data$POP20[i]) && (complete_bee_data$POP20[i]) <= quantile_3){
+      append(urbanization_level, 2)
+    }
+    else if (quantile_3 < (complete_bee_data$POP20[i]) && (complete_bee_data$POP20[i]) <= quantile_4){
+      append(urbanization_level, 3)
+    }
+    else if (quantile_4 < (complete_bee_data$POP20[i]) && (complete_bee_data$POP20[i]) <= quantile_5){
+      append(urbanization_level, 4)
+    }
+}
 }
 
-  # splitting POP20 into 4 even? categories
+  # splitting POP20 into 4 even categories
 complete_bee_data <- complete_bee_data %>%
   mutate(urbanization_level = sapply(complete_bee_data$POP20, quantile(complete_bee_data$POP20, na.rm = TRUE))) 
 
