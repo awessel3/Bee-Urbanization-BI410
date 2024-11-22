@@ -28,7 +28,7 @@ head(bee_data)
 #melanopygus <- bee_data[bee_data$Species == "melanopygus",]
 
 # want to just keep our species from the main dataframe
-filtered_bee_data <- bee_data[bee_data$Species %in% c("vosnesenskii", "melanopygus"), ]
+filtered_bee_data <- bee_data[bee_data$Species %in% c("vosnesenskii", "melanopygus", "mixtus", "californicus", "griseocollis"), ]
 colnames(filtered_bee_data)
 
 # want to keep Dec..Lat. and Dec..Long. and Collection.Date and Collection.Day.1
