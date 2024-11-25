@@ -107,5 +107,29 @@ step(model1)
 vif(model1)
 
 ```
+```{r}
+# MOdel applied to each species 
 
+select_species <- c("vosnesenskii", "melanopygus", "mixtus", "griseocollis")
+
+model_results <- list()
+
+for (i in seq_along(select_species)) {
+  
+  formula_for_species <- DOY ~ 1 + urbanization_level + springTemp + scale(POP20) + (1 | COUNTY)
+  
+  single_species <- na.omit(complete_bee_data[complete_bee_data$Species == select_species[i], ])
+  
+  species_model <- lmer(formula_for_species, data = single_species)
+  model_results[[select_species[i]]] <- species_model
+}
+
+model_summaries <- lapply(model_results, summary)
+
+model_summaries[1]
+model_summaries[2]
+model_summaries[3]
+model_summaries[4]
+
+```
 
