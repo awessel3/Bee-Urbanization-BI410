@@ -86,7 +86,7 @@ complete_bee_data <- complete_bee_data %>%
 
 dat <- data.frame(
   DOY = complete_bee_data$DOY,
-  springTemp = complete_bee_data$springTemp,
+  springTemp = scale(complete_bee_data$springTemp),
   urbanizationLevel = complete_bee_data$urbanization_level,
   species = complete_bee_data$Species,
   pop = scale(complete_bee_data$POP20)
@@ -116,7 +116,7 @@ model_results <- list()
 
 for (i in seq_along(select_species)) {
   
-  formula_for_species <- DOY ~ 1 + urbanization_level + springTemp + scale(POP20) + (1 | COUNTY)
+  formula_for_species <- DOY ~ 1 + urbanization_level + scale(springTemp) + scale(POP20) + (1 | COUNTY)
   
   single_species <- na.omit(complete_bee_data[complete_bee_data$Species == select_species[i], ])
   
