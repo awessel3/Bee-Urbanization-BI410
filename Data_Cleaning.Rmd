@@ -26,9 +26,10 @@ head(bee_data)
 
 #vosenesenskii <- bee_data[bee_data$Species == "vosnesenskii", ]
 #melanopygus <- bee_data[bee_data$Species == "melanopygus",]
+#griseocollis <- bee_data[bee_data$Species == "griseocollis", ]
 
 # want to just keep our species from the main dataframe
-filtered_bee_data <- bee_data[bee_data$Species %in% c("vosnesenskii", "melanopygus", "mixtus", "californicus", "griseocollis"), ]
+filtered_bee_data <- bee_data[bee_data$Species %in% c("vosnesenskii", "melanopygus", "mixtus", "griseocollis"), ]
 colnames(filtered_bee_data)
 
 # want to keep Dec..Lat. and Dec..Long. and Collection.Date and Collection.Day.1
@@ -106,6 +107,7 @@ filtered_bee_data <- mutate(filtered_bee_data,
 
 
 filtered_bee_data <- na.omit(filtered_bee_data)
+
 dim(filtered_bee_data)
 
 ```
@@ -116,12 +118,12 @@ dim(filtered_bee_data)
 
 prism_set_dl_dir("prism_data")
 
-get_prism_monthlys(
-  type = "tmean", 
-  year=2016:2021,
-  mon=1:12,
-  keepZip = FALSE
-)
+# get_prism_monthlys(
+#   type = "tmean", 
+#   year=2016:2021,
+#   mon=1:12,
+#   keepZip = FALSE
+# )
 
 sub.tmean <- prism_archive_subset("tmean", "monthly", mon = 1:12)
 
