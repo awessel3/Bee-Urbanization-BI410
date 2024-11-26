@@ -53,5 +53,13 @@ ggplot() +
 ```
 ```{r climate plot?}
 
+# using the temperatures in April/beginning of spring is what I was thinking 
+
+ggplot() +
+  geom_polygon(data=or, aes(x=lon, y=lat, group=group)) +
+  geom_sf(data = bombus_shp, aes(color = tmean_4)) +
+  scale_color_gradient(low="lightblue", high="red") + ggtitle("Average Temperatures (°C) in April")
+
+
 
 ```
