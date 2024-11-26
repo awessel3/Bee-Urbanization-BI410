@@ -15,6 +15,8 @@ library(terra)
 library(lme4)
 library(lmerTest)
 library(car)
+library(ggplot2)
+library(ggeffects)
 setwd("~/Bee-Urbanization-BI410")
 
 complete_bee_data <- read_rds("Data/final_bee_dataset")
@@ -130,6 +132,31 @@ model_summaries[1]
 model_summaries[2]
 model_summaries[3]
 model_summaries[4]
+
+```
+
+``` {r}
+# Visualizations for emergence sensitivities
+
+plot(model1)
+
+ggplot(data = complete_bee_data, aes(x = scale(springTemp), y = DOY)) + geom_point()
+
+tempDOY <- ggpredict(model1, terms = c("springTemp"))
+
+tempDOY_plot <- ggplot(tempDOY, aes(x = x, y = predicted)) +
+  geom_point(data = complete_bee_data, 
+             aes(x = scale(springTemp), y = DOY, color = "Observed Data"), 
+             alpha = 0.5) +
+  geom_line(aes(color = "Model Prediction"), linewidth = 1) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
+  scale_color_manual(values = c("Observed Data" = "steelblue", "Model Prediction" = "darkblue")) +
+  labs(x = "Scaled Spring Temperature", y = "DOY", color = "Legend", fill = "Legend") +
+  theme_minimal()
+
+
+
+tempDOY_plot
 
 ```
 
