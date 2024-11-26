@@ -14,7 +14,7 @@ library(sf)
 
 ```
 
-```{r}
+```{r Bombus observations across oregon}
 complete_bee_data <- read_rds("Data/final_bee_dataset")
 
 # making our data into a shapefile for plotting
@@ -24,8 +24,8 @@ bombus_shp <- st_as_sf(complete_bee_data,
 )
 
 # downloading in the Oregon base map 
-or <- map_data("county", "oregon") %>% select(lon = long, lat, group, id = subregion)
-
+or <- map_data("county", "oregon")%>% 
+  select(lon = long, lat, group, id = subregion)
 
 # plotting!
 ggplot() +
@@ -37,4 +37,21 @@ ggplot() +
     values = c("red", "white", "forestgreen", "violet"), # Custom colors for each species
     name = "Species"
   ) 
+```
+
+```{r Census Blocks Plot}
+
+census_shp <- st_read("Data/CensusBlockGroups/CensusBlockGroups.shp")
+
+ggplot() +
+   # census block layer
+  geom_sf(data = census_shp, aes(fill = POP20)) + 
+  # filling the blocks based on population AND adding legend for this (using a binned color scale)
+  scale_fill_viridis_c(option="turbo", name = "Population") + ggtitle("Census Blocks of Oregon ") +
+  xlab("lon") + ylab("lat")
+   
+```
+```{r climate plot?}
+
+
 ```
