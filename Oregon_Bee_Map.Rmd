@@ -6,24 +6,35 @@ date: "2024-11-26"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(ggplot2)
+library(terra)
+library(sf)
+
 ```
 
-## R Markdown
+```{r}
+complete_bee_data <- read_rds("Data/final_bee_dataset")
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+# making our data into a shapefile for plotting
+bombus_shp <- st_as_sf(complete_bee_data,
+                                   coords = c("Dec..Long.", "Dec..Lat."),
+                                   crs = st_crs("EPSG:4326"), na.fail = FALSE	
+)
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+# downloading in the Oregon base map 
+or <- map_data("county", "oregon") %>% select(lon = long, lat, group, id = subregion)
 
-```{r cars}
-summary(cars)
+
+# plotting!
+ggplot() +
+  geom_polygon(data=or, aes(x=lon, y=lat, group=group)) +
+  geom_sf(data = bombus_shp, aes(color = Species)) +
+  scale_color_viridis_d(name = "Species") + 
+  ggtitle("4 Bombus sp. Observations Across Oregon") + 
+  scale_color_manual(
+    values = c("red", "white", "forestgreen", "violet"), # Custom colors for each species
+    name = "Species"
+  ) 
 ```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
