@@ -1,0 +1,106 @@
+```{r}
+library(lme4)
+library(lmerTest)
+library(car)
+library(ggplot2)
+library(ggeffects)
+library(ggpubr)
+setwd("~/Bee-Urbanization-BI410")
+
+
+complete_bee_data <- read_rds("Data/final_bee_dataset")
+
+model1 <- read_rds("~/Bee-Urbanization-BI410/model1")
+
+complete_bee_data <- complete_bee_data %>%
+  rowwise() %>%
+  mutate(springTemp = mean(c_across(c("tmean_6", "tmean_7", 
+                                      "tmean_8", "tmean_9", "tmean_10")), na.rm = TRUE)) %>%
+  ungroup()
+
+```
+
+
+Spring Temperature vs DOY Visualization
+```{r}
+
+#plot(model1)
+
+#ggplot(data = complete_bee_data, aes(x = scale(springTemp), y = DOY)) + geom_point()
+
+tempDOY <- ggpredict(model1, terms = c("springTemp"))
+
+tempDOY_plot <- ggplot(tempDOY, aes(x = x, y = predicted)) +
+  geom_point(data = complete_bee_data, 
+             aes(x = scale(springTemp), y = DOY, color = "Observed Data"), 
+             alpha = 0.5) +
+  geom_line(aes(color = "Model Prediction"), linewidth = 1) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
+  scale_color_manual(values = c("Observed Data" = "steelblue", "Model Prediction" = "darkblue")) +
+  labs(x = "Scaled Spring Temperature", y = "DOY", color = "Legend", fill = "Legend") +
+  theme_minimal()
+
+
+
+tempDOY_plot
+
+```
+
+
+
+Urbanization Level vs DOY Visualization
+```{r}
+
+
+urbanizationDOY <- ggpredict(model1, terms = c("urbanizationLevel"))
+
+pvalues_df <- data.frame(
+  group1 = "rural",
+  group2 = "urban",
+  p = "***"
+)
+
+urbanizationDOY_plot <- ggplot(urbanizationDOY, aes(x = x, y = predicted)) +
+  geom_line(aes(group = 1), size = 1) + 
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), 
+                width = 0.2, size = 0.8, color = "darkgrey") +
+  labs(x = "Urbanization Level", 
+       y = "Predicted DOY") +
+  theme_minimal() +
+  stat_pvalue_manual(data = pvalues_df, 
+                     label = "p", 
+                     y.position = 203, 
+                     tip.length = 0.03, 
+                     inherit.aes = FALSE, 
+                     bracket.size = 0.5,
+                     label.size = 5) 
+
+
+urbanizationDOY_plot
+
+```
+
+
+
+
+Population vs DOY
+```{r}
+#Not a very helpful graph just made it to look at what it would look like
+
+popDOY <- ggpredict(model1, terms = c("pop"))
+
+popDOY_plot <- ggplot(popDOY, aes(x = x, y = predicted)) +
+  geom_point(data = complete_bee_data, 
+             aes(x = scale(POP20), y = DOY, color = "Observed Data"), 
+             alpha = 0.5) +
+  geom_line(aes(color = "Model Prediction"), linewidth = 1) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
+  scale_color_manual(values = c("Observed Data" = "steelblue", "Model Prediction" = "darkblue")) +
+  labs(x = "Scaled Population", y = "DOY", color = "Legend", fill = "Legend") +
+  theme_minimal()
+
+
+
+popDOY_plot
+
+```
