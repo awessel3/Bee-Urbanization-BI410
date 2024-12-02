@@ -27,6 +27,8 @@ complete_bee_data <- complete_bee_data %>%
                                       "tmean_8", "tmean_9", "tmean_10")), na.rm = TRUE)) %>%
   ungroup()
 
+summary(model1)
+
 ```
 
 
@@ -168,7 +170,20 @@ ggplot(results, aes(x = reorder(species, slope), y = slope)) +
     axis.text.x = element_text(angle = 45, hjust = 1) # Rotate species labels for clarity
   ) 
 
+```
 
 
 
+
+
+
+```{r}
+doy_avg <- complete_bee_data %>% 
+  group_by(Species) %>% 
+  summarise(doy_avg = mean(DOY), 
+            observations = sum(n())) %>% 
+  arrange(doy_avg, desc = TRUE)
+
+doy_avg
+ 
 ```

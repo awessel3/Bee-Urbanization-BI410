@@ -158,10 +158,20 @@ bee_long <- bee_long %>%
   dplyr::select(-c(month.prism,winter.month.prism, year.prism,class))%>% 
   print(bee_long)
 
+bee_long <- bee_long %>%
+  group_by(Species, winter.year.prism, tmean.month) %>%
+  mutate(row_id = row_number()) # Add a unique ID to prevent collapsing
+
+
+bee.dat.tmean <- pivot_wider(
+  bee_long,
+  names_from = tmean.month,
+  values_from = value,
+  values_fn = mean # Or another aggregation function
+)
+
 # pivot back to wide
-bee.dat.tmean <- pivot_wider(bee_long, names_from=tmean.month, 
-                             values_from=value, values_fn = mean) %>%
-  dplyr::select(-c(var))
+#bee.dat.tmean <- pivot_wider(bee_long, names_from=tmean.month, values_from=value, values_fn = mean) %>% dplyr::select(-c(var))
 print(bee.dat.tmean)
 dim(bee.dat.tmean)
 
@@ -170,10 +180,11 @@ print(bee.data)
 
 bee_data_wTemp <-  bee.data %>%
   rowwise()%>%
-  mutate(temp=mean(c_across(tmean_1:tmean_9)))
+  mutate(temp=mean(c_across(tmean_1:tmean_9))) %>% dplyr::select(-c(var, Year.1))
 
-
-head(bee_data_wTemp) #tmean is set up with september being the 1st month currently, capturing weather before current spring year. 
+dim(bee_long) # Check the size of the dataset before pivoting
+summary(bee_long) # Summarize to check for NAs
+anyDuplicated(bee_long[, c("Species", "winter.year.prism", "tmean.month")]) # Check for duplicates in key columns
 
 sum(is.na(bee_data_wTemp)) 
 dim(bee_data_wTemp)
