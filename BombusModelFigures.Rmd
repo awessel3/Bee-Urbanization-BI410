@@ -2,15 +2,24 @@
 library(lme4)
 library(lmerTest)
 library(car)
+library(sp)
+library(sf)
+library(raster)
+library(prism)
+library(terra)
 library(ggplot2)
 library(ggeffects)
 library(ggpubr)
+library(tidyverse)
 setwd("~/Bee-Urbanization-BI410")
 
 
 complete_bee_data <- read_rds("Data/final_bee_dataset")
 
 model1 <- read_rds("~/Bee-Urbanization-BI410/model1")
+
+species_summaries <- read_rds("~/Bee-Urbanization-BI410/species_model_summaries")
+
 
 complete_bee_data <- complete_bee_data %>%
   rowwise() %>%
@@ -102,5 +111,64 @@ popDOY_plot <- ggplot(popDOY, aes(x = x, y = predicted)) +
 
 
 popDOY_plot
+
+```
+
+```{r}
+
+species_summaries
+
+results <- data.frame(
+  species = character(),
+  slope = numeric(),
+  conf.low = numeric(),
+  conf.high = numeric(),
+  stringsAsFactors = FALSE
+)
+
+for (species_name in names(species_summaries)) {
+  coefficients <- species_summaries[[species_name]][["coefficients"]]
+  
+  if ("scale(springTemp)" %in% rownames(coefficients)) {
+    slope <- coefficients["scale(springTemp)", "Estimate"]
+    std_error <- coefficients["scale(springTemp)", "Std. Error"]
+    df <- coefficients["scale(springTemp)", "df"]
+    
+    t_critical <- qt(0.975, df = df)
+    conf.low <- slope - t_critical * std_error
+    conf.high <- slope + t_critical * std_error
+    
+    results <- rbind(
+      results,
+      data.frame(
+        species = species_name,
+        slope = slope,
+        conf.low = conf.low,
+        conf.high = conf.high,
+        stringsAsFactors = FALSE
+      )
+    )
+  } else {
+    warning(paste("scale(springTemp) not found in model for species:", species_name))
+  }
+}
+
+
+ggplot(results, aes(x = reorder(species, slope), y = slope)) +
+  geom_smooth(aes(group = 1), method = "lm", se = TRUE, color = "grey", linetype = "solid")  + 
+  geom_point(size = 3, color = "steelblue") +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2, color = "gray50") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red", size = 0.8) +
+  labs(
+    y = "Phenological Sensitivity (days/°C)",
+    x = "Species",
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1) # Rotate species labels for clarity
+  ) 
+
+
+
 
 ```

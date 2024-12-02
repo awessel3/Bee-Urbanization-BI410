@@ -140,4 +140,6 @@ model_summaries[2]
 model_summaries[3]
 model_summaries[4]
 
+saveRDS(model_summaries, "~/Bee-Urbanization-BI410/species_model_summaries")
+
 ```
