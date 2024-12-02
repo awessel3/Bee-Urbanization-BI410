@@ -11,6 +11,7 @@ library(ggplot2)
 library(ggeffects)
 library(ggpubr)
 library(tidyverse)
+library(performance)
 setwd("~/Bee-Urbanization-BI410")
 
 
@@ -42,6 +43,7 @@ Spring Temperature vs DOY Visualization
 #ggplot(data = complete_bee_data, aes(x = scale(springTemp), y = DOY)) + geom_point()
 
 tempDOY <- ggpredict(model1, terms = c("springTemp"))
+
 
 tempDOY_plot <- ggplot(tempDOY, aes(x = x, y = predicted)) +
   geom_point(data = complete_bee_data, 

@@ -75,6 +75,7 @@ assign_urbanization_level <- function(data) {
 
 
 complete_bee_data <- assign_urbanization_level(complete_bee_data)
+saveRDS(complete_bee_data, "~/Bee-Urbanization-BI410/complete_bee_data")
 
 ```
 
