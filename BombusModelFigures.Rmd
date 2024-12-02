@@ -27,6 +27,8 @@ complete_bee_data <- complete_bee_data %>%
                                       "tmean_8", "tmean_9", "tmean_10")), na.rm = TRUE)) %>%
   ungroup()
 
+anova(model1)
+
 summary(model1)
 
 ```
@@ -65,26 +67,23 @@ Urbanization Level vs DOY Visualization
 
 urbanizationDOY <- ggpredict(model1, terms = c("urbanizationLevel"))
 
-pvalues_df <- data.frame(
-  group1 = "rural",
-  group2 = "urban",
-  p = "***"
-)
+#pvalues_df <- data.frame( group1 = "rural",group2 = "urban", p = "***")
 
 urbanizationDOY_plot <- ggplot(urbanizationDOY, aes(x = x, y = predicted)) +
-  geom_line(aes(group = 1), size = 1) + 
+  geom_line(aes(group = 1), size = 1) +  
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), 
                 width = 0.2, size = 0.8, color = "darkgrey") +
+  geom_point(size = 3, color = "steelblue") +
   labs(x = "Urbanization Level", 
        y = "Predicted DOY") +
-  theme_minimal() +
-  stat_pvalue_manual(data = pvalues_df, 
-                     label = "p", 
-                     y.position = 203, 
-                     tip.length = 0.03, 
-                     inherit.aes = FALSE, 
-                     bracket.size = 0.5,
-                     label.size = 5) 
+  theme_minimal() 
+  #stat_pvalue_manual(data = pvalues_df, 
+                     #label = "p", 
+                     #y.position = 203, 
+                     #tip.length = 0.03, 
+                     #inherit.aes = FALSE, 
+                     #bracket.size = 0.5,
+                    # label.size = 5) 
 
 
 urbanizationDOY_plot
@@ -150,14 +149,12 @@ for (species_name in names(species_summaries)) {
         stringsAsFactors = FALSE
       )
     )
-  } else {
-    warning(paste("scale(springTemp) not found in model for species:", species_name))
-  }
+  } 
 }
 
 
 ggplot(results, aes(x = reorder(species, slope), y = slope)) +
-  geom_smooth(aes(group = 1), method = "lm", se = TRUE, color = "grey", linetype = "solid")  + 
+  #geom_smooth(aes(group = 1), method = "lm", se = TRUE, color = "grey", linetype = "solid")  + 
   geom_point(size = 3, color = "steelblue") +
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2, color = "gray50") +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red", size = 0.8) +
