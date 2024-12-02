@@ -49,7 +49,7 @@ tempDOY_plot <- ggplot(tempDOY, aes(x = x, y = predicted)) +
              alpha = 0.5) +
   geom_line(aes(color = "Model Prediction"), linewidth = 1) +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
-  scale_color_manual(values = c("Observed Data" = "steelblue", "Model Prediction" = "darkblue")) +
+  scale_color_manual(values = c("Observed Data" = "green3", "Model Prediction" = "darkgreen")) +
   labs(x = "Scaled Spring Temperature", y = "DOY", color = "Legend", fill = "Legend") +
   theme_minimal()
 
@@ -73,7 +73,7 @@ urbanizationDOY_plot <- ggplot(urbanizationDOY, aes(x = x, y = predicted)) +
   geom_line(aes(group = 1), size = 1) +  
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), 
                 width = 0.2, size = 0.8, color = "darkgrey") +
-  geom_point(size = 3, color = "steelblue") +
+  geom_point(size = 3, color = "forestgreen") +
   labs(x = "Urbanization Level", 
        y = "Predicted DOY") +
   theme_minimal() 
@@ -155,11 +155,11 @@ for (species_name in names(species_summaries)) {
 
 ggplot(results, aes(x = reorder(species, slope), y = slope)) +
   #geom_smooth(aes(group = 1), method = "lm", se = TRUE, color = "grey", linetype = "solid")  + 
-  geom_point(size = 3, color = "steelblue") +
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2, color = "gray50") +
+  geom_point(size = 3, color = "forestgreen") +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red", size = 0.8) +
   labs(
-    y = "Phenological Sensitivity (days/°C)",
+    y = "Emergence Sensitivity (days/°C)",
     x = "Species",
   ) +
   theme_minimal() +
