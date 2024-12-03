@@ -72,11 +72,13 @@ ggplot() +
    # census block layer
   #geom_sf(data = census_shp, aes(fill = COUNTY)) + 
   geom_sf(data = census_shp, aes(fill = POP20)) + 
+  scale_fill_gradient(low="beige", high = "brown", name = "Population by Census Block") + 
+  
   geom_sf(data = complete_bee_data, aes(color = springTemp)) +
-  scale_color_gradient(low="lightblue", high="red") + ggtitle("Map of Avg Spring Temp (Feb-June) and Census Block Population Info") + theme(plot.title = element_text(hjust = 0.5)) + 
-  # filling the blocks based on population AND adding legend for this (using a binned color scale)
-  scale_fill_viridis_c(option = "H", name = "Population") + 
-  xlab("lon") + ylab("lat")
+  scale_color_gradient(low="blue", high="red", name = "Avg Spring Temp °C (Feb-June)") + ggtitle("All Bee Locations with Census Blocks and Spring Temperature Info") + theme(plot.title = element_text(hjust = 0.3, vjust = 3)) + 
+  
+  xlab("lon") + ylab("lat") 
+
   
 
 
