@@ -182,5 +182,11 @@ doy_avg <- complete_bee_data %>%
   arrange(doy_avg, desc = TRUE)
 
 doy_avg
+
+urbanization_sum <- complete_bee_data %>% 
+  group_by(urbanization_level) %>% 
+  summarise(area_sum = n())
+
+urbanization_sum
  
 ```
