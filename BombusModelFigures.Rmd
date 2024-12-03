@@ -11,7 +11,6 @@ library(ggplot2)
 library(ggeffects)
 library(ggpubr)
 library(tidyverse)
-library(performance)
 setwd("~/Bee-Urbanization-BI410")
 
 
@@ -52,9 +51,13 @@ tempDOY_plot <- ggplot(tempDOY, aes(x = x, y = predicted)) +
   geom_line(aes(color = "Model Prediction"), linewidth = 1) +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
   scale_color_manual(values = c("Observed Data" = "green3", "Model Prediction" = "darkgreen")) +
-  labs(x = "Scaled Spring Temperature", y = "DOY", color = "Legend", fill = "Legend") +
+  labs(x = "Scaled Spring Temperature", y = "DOY", color = "Legend", fill = "Legend",
+       title = "                  Effect of Temperature on Day of Emergence") +
   theme_minimal()
 
+#calculating slope 
+slope_tempDOY <- diff(tempDOY$predicted) / diff(tempDOY$x)
+print(slope_tempDOY)
 
 
 tempDOY_plot
@@ -77,15 +80,9 @@ urbanizationDOY_plot <- ggplot(urbanizationDOY, aes(x = x, y = predicted)) +
                 width = 0.2, size = 0.8, color = "darkgrey") +
   geom_point(size = 3, color = "forestgreen") +
   labs(x = "Urbanization Level", 
-       y = "Predicted DOY") +
+       y = "Predicted DOY",
+       title = "                            Effect of Urbanization on Day of Emergence") +
   theme_minimal() 
-  #stat_pvalue_manual(data = pvalues_df, 
-                     #label = "p", 
-                     #y.position = 203, 
-                     #tip.length = 0.03, 
-                     #inherit.aes = FALSE, 
-                     #bracket.size = 0.5,
-                    # label.size = 5) 
 
 
 urbanizationDOY_plot
@@ -163,6 +160,7 @@ ggplot(results, aes(x = reorder(species, slope), y = slope)) +
   labs(
     y = "Emergence Sensitivity (days/°C)",
     x = "Species",
+    title = "                  Species-Specific Emergence Sensitivity to Temperature"
   ) +
   theme_minimal() +
   theme(

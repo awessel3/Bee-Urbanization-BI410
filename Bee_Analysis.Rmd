@@ -82,6 +82,7 @@ saveRDS(model1, "~/Bee-Urbanization-BI410/model1")
 
 # calculating R^2 values
 r2 <- r.squaredGLMM(model1)
+r2
 
 ```
 
