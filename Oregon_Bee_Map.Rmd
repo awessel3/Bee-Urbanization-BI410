@@ -15,7 +15,7 @@ library(sf)
 ```
 
 ```{r Bombus observations across oregon}
-complete_bee_data <- read_rds("Data/final_bee_dataset")
+complete_bee_data <- read_rds("Data/complete_bee_data")
 
 # making our data into a shapefile for plotting
 bombus_shp <- st_as_sf(complete_bee_data,
@@ -48,7 +48,8 @@ ggplot() +
   geom_polygon(data=or, aes(x=lon, y=lat, group=group)) +
   geom_sf(data = cropped_bombus_shp, aes(color = Species)) +
   scale_color_viridis_d(name = "Species") + 
-  ggtitle("4 Bombus sp. Observations Across Oregon") + 
+  ggtitle("Bombus Species Observations Across Oregon") + 
+  labs(x = "longitude", y = "latitude") + 
   scale_color_manual(
     values = c("red", "white", "forestgreen", "violet"), # Custom colors for each species
     name = "Species"
