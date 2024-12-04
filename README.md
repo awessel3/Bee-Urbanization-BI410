@@ -46,3 +46,5 @@ Blasi, M., Carrié, R., Fägerström, C., Svensson, E., & Persson, A. S. (2023).
 Prestele, R., Brown, C., Polce, C., Maes, J., & Whitehorn, P. (2021). Large variability in response to projected climate and land‐use changes among European bumblebee species. Global Change Biology, 27(19), 4530–4545. https://doi.org/10.1111/gcb.15780
 
 Li, D., Barve, N., Brenskelle, L., Earl, K., Barve, V., Belitz, M. W., Doby, J., Hantak, M. M., Oswald, J. A., Stucky, B. J., Walters, M., & Guralnick, R. P. (2021). Climate, urbanization, and species traits interactively drive flowering duration. Global Change Biology, 27(4), 892–903. https://doi.org/10.1111/gcb.15461
+
+iNaturalist community. Observations of Bombus spp. from Oregon, recorded between 2017 and 2024. Data exported from https://www.inaturalist.org on December 4, 2024.
