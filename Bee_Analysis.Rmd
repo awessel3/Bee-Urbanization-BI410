@@ -28,7 +28,8 @@ complete_bee_data <- read_rds("Data/final_bee_dataset")
 ## Adding urbanization levels 
 
 ```{r}
-
+# function to add urbanization levels, rural, subrural, suburban, and urban
+  # split into 4 even categories using the quantile function
 assign_urbanization_level <- function(data) {
   quantiles <- quantile(data$POP20, probs = seq(0 , 1, 0.25), na.rm = TRUE)
   
@@ -50,6 +51,8 @@ saveRDS(complete_bee_data, "~/Bee-Urbanization-BI410/Data/complete_bee_data")
 ## 
 
 ```{r}
+
+# creating the column spring temp, averaging temperatures from Feb to June
 complete_bee_data <- complete_bee_data %>%
   rowwise() %>%
   mutate(springTemp = mean(c_across(c("tmean_6", "tmean_7", 

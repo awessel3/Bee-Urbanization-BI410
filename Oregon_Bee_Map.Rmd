@@ -11,6 +11,7 @@ library(dplyr)
 library(ggplot2)
 library(terra)
 library(sf)
+library(tidyverse)
 
 ```
 
@@ -84,19 +85,25 @@ ggplot() +
 
 
 ```
-```{r climate plot?}
+```{r climate plot}
 
-# using the temperatures in April/beginning of spring is what I was thinking 
+
+# Calculating the same average spring temperatures that we used for the model 
 complete_bee_data <- cropped_bombus_shp %>%
   rowwise() %>%
   mutate(springTemp = mean(c_across(c("tmean_6", "tmean_7", 
                                       "tmean_8", "tmean_9", "tmean_10")), na.rm = TRUE)) %>%
   ungroup()
 
+# Plotting the average spring temperatures where the bees were captured, and outlining the counties
+                            # and we can see generally where the populated areas are
 ggplot() +
-  geom_polygon(data=or, aes(x=lon, y=lat, group=group)) +
+  geom_polygon(data=or, aes(x=lon, y=lat, group=group), color = "black", fill = "tan")+
   geom_sf(data = complete_bee_data, aes(color = springTemp)) +
-  scale_color_gradient(low="lightblue", high="red") + ggtitle("Average Spring (Feb-June) Temperatures (°C)") + theme(plot.title = element_text(hjust = 0.5))
+  scale_color_gradient2(low = "white", 
+    mid = "blue", 
+    high = "red", 
+    midpoint = .02, name = "Temperature (°C)" ) + ggtitle("Average Spring (Feb-June) Temperatures (°C)") + theme(plot.title = element_text(hjust = 0.5)) + xlab("Longitude") + ylab("Latitude")
 
 
 

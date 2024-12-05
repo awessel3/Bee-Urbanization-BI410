@@ -202,8 +202,7 @@ dim(bee_data_wTemp)
 
 
 ```{r}
-
-census <- read.csv("CensusBlockGroups.csv")
+# Adding in Census Block Data
 
 census_shp <- st_read("Data/CensusBlockGroups/CensusBlockGroups.shp")
 
