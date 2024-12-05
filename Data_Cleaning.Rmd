@@ -4,9 +4,6 @@ output: html_document
 date: "2024-11-07"
 ---
 
-## Data Exploration
-
-
 ``` {r}
 #install.packages("lubridate")\
 library(lubridate)
@@ -17,7 +14,10 @@ library(raster)
 library(prism)
 library(terra)
 setwd("~/Bee-Urbanization-BI410")
+```
 
+# Our initial data cleaning down to our 4 species
+```{r}
 bee_data <- read.csv("OBA_2018-2023_combined_dataset_working.csv")
 
 head(bee_data)
@@ -113,8 +113,10 @@ dim(filtered_bee_data)
 ```
 
 
+# Adding in PRISM climate data 
 ```{r}
-#Adding PRISM Data 
+#Adding PRISM Data and calculating values for 'winter year' so that we take into account the months prior to the 
+        # spring season that would be afffecting what we see
 
 prism_set_dl_dir("prism_data")
 
@@ -200,7 +202,7 @@ dim(bee_data_wTemp)
 
 ```
 
-
+# Census Block Data
 ```{r}
 # Adding in Census Block Data
 

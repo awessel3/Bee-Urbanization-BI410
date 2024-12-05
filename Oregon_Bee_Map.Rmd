@@ -15,6 +15,9 @@ library(tidyverse)
 
 ```
 
+
+# Bombus Observations across Oregon
+
 ```{r Bombus observations across oregon}
 complete_bee_data <- read_rds("Data/complete_bee_data")
 
@@ -57,6 +60,8 @@ ggplot() +
   ) 
 ```
 
+# Census Blocks Plot
+
 ```{r Census Blocks Plot}
 
 census_shp <- st_read("Data/CensusBlockGroups/CensusBlockGroups.shp")
@@ -85,6 +90,9 @@ ggplot() +
 
 
 ```
+
+
+# Climate plot
 ```{r climate plot}
 
 

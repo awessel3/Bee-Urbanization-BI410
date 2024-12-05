@@ -20,7 +20,7 @@ library(car)
 library(ggplot2)
 library(ggeffects)
 library(ggpubr)
-#setwd("~/Bee-Urbanization-BI410")
+setwd("~/Bee-Urbanization-BI410")
 
 complete_bee_data <- read_rds("Data/final_bee_dataset")
 ```
@@ -48,9 +48,9 @@ saveRDS(complete_bee_data, "~/Bee-Urbanization-BI410/Data/complete_bee_data")
 
 ```
 
-## 
+## Finalizing the columns and data that we want to use for our model and running the model
 
-```{r}
+```{r model}
 
 # creating the column spring temp, averaging temperatures from Feb to June
 complete_bee_data <- complete_bee_data %>%
@@ -59,6 +59,7 @@ complete_bee_data <- complete_bee_data %>%
                                       "tmean_8", "tmean_9", "tmean_10")), na.rm = TRUE)) %>%
   ungroup()
 
+# creating a dataframe with all of our variables that we want to use in the model
 dat <- data.frame(
   DOY = complete_bee_data$DOY,
   springTemp = scale(complete_bee_data$springTemp),
@@ -71,7 +72,7 @@ sum(is.na(dat))
 dat$springTemp <- as.numeric(dat$springTemp)
 
 
-
+# Model 
 formula <- DOY ~ 1 + urbanizationLevel + springTemp + pop + (1 | species)
 
 model1 <- lmer(formula, data = dat)
@@ -91,7 +92,7 @@ r2
 
 
 
-
+## Applying the model to each of our 4 species
 ```{r}
 # MOdel applied to each species 
 
