@@ -6,7 +6,28 @@ date: "2024-12-08"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(MuMIn)
+library(lubridate)
+library(tidyverse)
+library(sp)
+library(sf)
+library(raster)
+library(prism)
+library(terra)
+library(lme4)
+library(lmerTest)
+library(car)
+library(ggplot2)
+library(ggeffects)
+library(ggpubr)
+
+setwd("~/Bee-Urbanization-BI410")
+
+complete_bee_data <- read_rds("Data/final_bee_dataset")
+
 ```
+
+Note to reader: We had to combine four different R markdown scripts, so the addition of saving our models/datasets and rereading in the datasets was set up prior to combination. I guess it is still a good habit to have though. 
 
 Effect of Urbanization and Temperature on Bombus spp. Emergence
 
@@ -21,41 +42,530 @@ Understanding these emergence patterns and phenological shifts is crucial for po
 Our research question is: How does peak emergence for four Bombus species, vosnesenskii, melanopygus, mixtus, and griseocollis, vary along climatic and urbanization gradients? Our first hypothesis is that bees in more heavily urbanized areas will have earlier emergence dates. Our second hypothesis is that areas that have higher mean temperatures will show earlier emergence times. Our third hypothesis is that earlier emerging species will be more sensitive to warming temperature than later emerging species, specifically we will see a more significant change in emergence days per °C of temperature change. 
 
 
-
 II. Data/ Data Wrangling: 
 
 The data that we be combined is the OBA dataset and merged it with US Census data to get whether those bee observations were in a more rural or urban area. We read in the US Census block data as a shapefile data type. Then we wrangled the population column into 4 even categories using the quantile function. The 4 categories were rural, subrural, urban, and suburban. We then read in the PRISM temperature data, originally as raster data, merging each of the bee observations with temperature, joining on latitude and longitude in order to see what the average temperature is in the area the bee was recorded. With the PRISM temperature data we calculated average spring temperatures, finding the mean of the average temperature from months February-June. For data exploration we made a couple tables filtering the species we were considering focusing on for our analysis, in the Data_Exploration.Rmd file and we took a look at any weird values like NAs in our dataframes using tables in the Data_Cleaning.Rmd file.
 
-Code found in file: Data_Cleaning.rmd 
+```{r}
+#Loading in OBA
+bee_data <- read.csv("OBA_2018-2023_combined_dataset_working.csv")
 
+head(bee_data)
+
+# want to just keep our species from the main dataframe
+filtered_bee_data <- bee_data[bee_data$Species %in% c("vosnesenskii", "melanopygus", "mixtus", "griseocollis"), ]
+colnames(filtered_bee_data)
+
+# want to keep Dec..Lat. and Dec..Long. and Collection.Date and Collection.Day.1
+filtered_bee_data <- filtered_bee_data %>%
+    dplyr::select(Dec..Lat., Dec..Long., Collection.Date, Species, Year.1)
+ 
+head(filtered_bee_data)
+
+# removing these na rows 
+filtered_bee_data <- na.omit(filtered_bee_data)
+```
+
+# creating a day of year column
+```{r}
+# logic behind the day of year: January 1st is day 1, jan 2nd is day 2 etc 
+
+  # using lubridate
+
+calc_day_of_year <- function(date){
+  
+  # converting the string object to a Date object
+  # parses mm/dd/yyyy
+  date <- mdy(date) 
+  
+  # get day of year
+  day_of_year <- yday(date)
+  
+  return (day_of_year)
+  
+}
+
+filtered_bee_data <- mutate(filtered_bee_data, DOY = calc_day_of_year(Collection.Date))
+
+#Creating winter month, day, and year for PRISM extraction 
+month <- seq(as.Date("2020-01-01"), 
+             as.Date("2020-12-01"), 
+             by = "1 month")
+month_label <- lubridate::month(month, label = TRUE)
+
+winter.months <- seq(as.Date("2020-09-01"), 
+                     as.Date("2021-08-01"), 
+                     by = "1 month")
+winter.month_label <- lubridate::month(winter.months, label = TRUE)
+
+filtered_bee_data <- filtered_bee_data %>%
+  mutate(Collection.Date=mdy(Collection.Date)
+         ,year=as.numeric(year(Collection.Date))
+         ,month=month(Collection.Date)
+         ,doy = yday(Collection.Date)
+  ) %>%
+  arrange(year,doy) 
+
+filtered_bee_data <- filtered_bee_data %>% rename(latitude = Dec..Lat., longitude = Dec..Long.)
+
+filtered_bee_data <- mutate(filtered_bee_data,
+                 winter.year = ifelse(month>8, year+1, year)
+                 ,winter.month = ifelse(month>8, month-8, month+4)
+                 ,winter.day = ifelse(month>8, doy-243, doy+120)
+)
+
+
+filtered_bee_data <- na.omit(filtered_bee_data)
+
+dim(filtered_bee_data)
+
+```
+
+
+# Adding in PRISM climate data 
+```{r}
+#Adding PRISM Data and calculating values for 'winter year' so that we take into account the months prior to the spring season that would be afffecting what we see
+
+prism_set_dl_dir("prism_data")
+
+get_prism_monthlys(
+ type = "tmean", 
+ year=2016:2021,
+ mon=1:12,
+ keepZip = FALSE
+ )
+
+sub.tmean <- prism_archive_subset("tmean", "monthly", mon = 1:12)
+
+RS <- pd_stack(sub.tmean) ##raster file  
+
+bee.test <- filtered_bee_data
+bee.spdf <-   SpatialPointsDataFrame(coords=bee.test[,c('longitude','latitude')], 
+                                    data=bee.test, proj4string = CRS("+proj=longlat +ellps=WGS84 +no_defs"))
+
+bee.clim <- extract(RS, bee.spdf,  fun=mean, na.rm=TRUE, sp=TRUE) 
+bee.clim <- as.data.frame(bee.clim)
+head(bee.clim,2); dim(bee.clim)
+
+
+bee_long <- pivot_longer(bee.clim, cols=starts_with("PRISM")) %>%
+  separate(col=name, sep="_", into=c("r1","var","class","res","dd","r2")) %>%
+  mutate(year.prism=as.numeric(str_sub(dd, 1, 4)),
+         month.prism=as.numeric(str_sub(dd, 5, 6)))%>%
+  dplyr::select(-c(r1,r2,latitude.1, longitude.1, dd))
+print(bee_long)
+dim(bee_long)
+
+bee_long <- bee_long %>%  
+  mutate(winter.year.prism = ifelse(month.prism>8, year.prism+1, year.prism)
+         ,winter.month.prism = ifelse(month.prism>8, month.prism-8, month.prism+4)
+         ,tmean.month = paste(var, winter.month.prism, sep="_")
+  ) %>% filter(winter.year.prism == winter.year) # filter to only the prism data from the same winter-year as the observation
+print(bee_long)
+dim(bee_long)
+
+bee_long <- bee_long %>% 
+  dplyr::select(-c(month.prism,winter.month.prism, year.prism,class))%>% 
+  print(bee_long)
+
+bee_long <- bee_long %>%
+  group_by(Species, winter.year.prism, tmean.month) %>%
+  mutate(row_id = row_number()) # Add a unique ID to prevent collapsing
+
+
+bee.dat.tmean <- pivot_wider(
+  bee_long,
+  names_from = tmean.month,
+  values_from = value,
+  values_fn = mean 
+)
+
+print(bee.dat.tmean)
+dim(bee.dat.tmean)
+
+bee.data <- bee.dat.tmean
+print(bee.data)
+
+bee_data_wTemp <-  bee.data %>%
+  rowwise()%>%
+  mutate(temp=mean(c_across(tmean_1:tmean_9))) %>% dplyr::select(-c(var, Year.1))
+
+dim(bee_long) # Check the size of the dataset before pivoting
+summary(bee_long) # Summarize to check for NAs
+anyDuplicated(bee_long[, c("Species", "winter.year.prism", "tmean.month")]) # Check for duplicates in key columns
+
+sum(is.na(bee_data_wTemp)) 
+
+```
+
+Census Block Data
+```{r}
+# Adding in Census Block Data
+
+census_shp <- st_read("Data/CensusBlockGroups/CensusBlockGroups.shp")
+
+census_sf <- census_shp %>% 
+  st_transform(crs = "EPSG:4326") %>% 
+  rename(latitude = INTPTLAT, longitude = INTPTLON) %>% 
+  dplyr::select(latitude, longitude, geometry, POP20, POPDENS20, COUNTY)
+  
+
+bee_sf <- st_as_sf(bee_data_wTemp,
+                        coords = c("longitude", "latitude"),
+                        crs = crs("EPSG:4326"))
+census_sf <- st_cast(census_sf, "POLYGON")
+
+bee_with_census <- st_join(bee_sf, census_sf)
+dim(bee_with_census)
+
+saveRDS(bee_with_census, "Data/final_bee_dataset")
+
+
+```
 
 III. Analysis / Hypothesis Testing:
 
 To test our hypothesis we used a linear mixed model, and we completed our analysis in the file Bee_Analysis.Rmd. We predicted the day of year of peak emergence for our bee species. We ran the model on all of the species together and on each species separately to see the specific effects of temperature and urbanization on each species. Our formula was: DOY ~ 1 + urbanizationLevel + springTemp + pop + (1 | species). So our fixed effects to predict the day of year were urbanization level, average spring temperature, and population. And our random effect was species to account for variation between species. We ran this model using the “lmer” function. We also used backward selection and the Variance Inflation Factor to make sure that the formula we were using was the most effective at predicting day of year and that we didn’t have any concerning covariance in our model. The output of our model found significance (p < 0.05) in each of our predicting effects, showing that when compared to rural, there was a significant difference in emergence time. Specifically the effect of urbanization resulted in an earlier emergence of about 15.8 days per °C compared to rural areas. Warmer spring temperatures resulted in an earlier emergence day by about 8.5 days per °C. We also found that Bombus spp. that on average have an earlier peak emergence were more sensitive to changes in temperature, going along a gradient where the later peak emergence species were found to be gradually less sensitive to temperature changes.  
 
-Code found in file: Bee_Analysis.rmd
+
+Adding urbanization levels 
+```{r}
+complete_bee_data <- read_rds("Data/final_bee_dataset")
+
+# function to add urbanization levels, rural, subrural, suburban, and urban
+  # split into 4 even categories using the quantile function
+assign_urbanization_level <- function(data) {
+  quantiles <- quantile(data$POP20, probs = seq(0 , 1, 0.25), na.rm = TRUE)
+  
+  data <- data %>% 
+    mutate(urbanization_level = cut(POP20,
+                                    breaks = quantiles,
+                                    labels = c("rural", "subrural", "suburban", "urban"),
+                                    include.lowest = TRUE))
+  
+  return(data)
+}
+
+
+complete_bee_data <- assign_urbanization_level(complete_bee_data)
+saveRDS(complete_bee_data, "~/Bee-Urbanization-BI410/Data/complete_bee_data")
+
+```
+
+Finalizing the columns and data that we want to use for our model and running the model
+```{r model}
+
+# creating the column spring temp, averaging temperatures from Feb to June
+complete_bee_data <- complete_bee_data %>%
+  rowwise() %>%
+  mutate(springTemp = mean(c_across(c("tmean_6", "tmean_7", 
+                                      "tmean_8", "tmean_9", "tmean_10")), na.rm = TRUE)) %>%
+  ungroup()
+
+# creating a dataframe with all of our variables that we want to use in the model
+dat <- data.frame(
+  DOY = complete_bee_data$DOY,
+  springTemp = scale(complete_bee_data$springTemp),
+  urbanizationLevel = complete_bee_data$urbanization_level,
+  species = complete_bee_data$Species,
+  pop = scale(complete_bee_data$POP20)
+)
+na.omit(dat)
+sum(is.na(dat))
+dat$springTemp <- as.numeric(dat$springTemp)
+
+
+# Model 
+formula <- DOY ~ 1 + urbanizationLevel + springTemp + pop + (1 | species)
+
+model1 <- lmer(formula, data = dat)
+
+summary(model1)
+step(model1)
+
+vif(model1)
+
+saveRDS(model1, "~/Bee-Urbanization-BI410/model1")
+
+# calculating R^2 values
+r2 <- r.squaredGLMM(model1)
+r2
+
+```
+
+## Applying the model to each of our 4 species
+```{r}
+# MOdel applied to each species 
+
+select_species <- c("vosnesenskii", "melanopygus", "mixtus", "griseocollis")
+
+model_results <- list()
+r2_val <- list()
+
+for (i in seq_along(select_species)) {
+  
+  formula_for_species <- DOY ~ 1 + urbanization_level + scale(springTemp) + scale(POP20) + (1 | COUNTY)
+  
+  single_species <- na.omit(complete_bee_data[complete_bee_data$Species == select_species[i], ])
+  
+  species_model <- lmer(formula_for_species, data = single_species)
+  model_results[[select_species[i]]] <- species_model
+  r2 <- r.squaredGLMM(species_model)
+ r2_val[i] <- r2[2]
+}
+
+model_summaries <- lapply(model_results, summary)
+
+model_summaries[1]
+model_summaries[2]
+model_summaries[3]
+model_summaries[4]
+
+r2_val
+
+saveRDS(model_summaries, "~/Bee-Urbanization-BI410/species_model_summaries")
+
+```
 
 
 IV. Visualizations: 
 
-These first two figures were made to summarize the raw data in two different ways. The code for these figures can be found in the Oregon_Bee_Map.rmd script. 
+These first two figures were made to summarize the raw data in two different ways. 
 
-![Map showing the average spring temperatures across Oregon, each point is a bee observation.](Figures/Avg_spring_temps_updated2.png)
+Bombus Observations across Oregon:
+```{r Bombus observations across oregon}
 
-![Map with average spring temperatures and population by Census Block across Oregon, each point is a bee observation.](Figures/census_an_temp.png)
-The three figures below showcases the predicted linear trend for spring temperature, urbanization, and species specific response. The code for these scripts can be found in the BombusModelFigures.rmd script. 
-![Average peak Bombus spp. emerge earlier with increasing spring temperatures.](Figures/temperatureDOYprediction.png)
-![Dense urban areas lead to an earlier average peak emergence when compared to rural areas.](Figures/UrbanizationDOYPrediction.png)
+# making our data into a shapefile for plotting
+bombus_shp <- st_as_sf(complete_bee_data,
+                                   coords = c("Dec..Long.", "Dec..Lat."),
+                                   crs = st_crs("EPSG:4326"), na.fail = FALSE	
+)
+
+# Calculating the same average spring temperatures that we used for the model 
+complete_bee_data <- cropped_bombus_shp %>%
+  rowwise() %>%
+  mutate(springTemp = mean(c_across(c("tmean_6", "tmean_7", 
+                                      "tmean_8", "tmean_9", "tmean_10")), na.rm = TRUE)) %>%
+  ungroup()
+
+# downloading in the Oregon base map 
+or <- map_data("county", "oregon")%>% 
+  dplyr::select(lon = long, lat, group, id = subregion)
+
+# first need to create the extent from the or dataframe
+min_long <- min(or$lon)
+max_long <- max(or$lon)
+min_lat <- min(or$lat)
+max_lat <- max(or$lat)
+
+or_extent <- c(xmin = min_long, xmax = max_long, ymin = min_lat, ymax = max_lat)
+
+# create bounding box
+bbox <- st_bbox(or_extent, crs = st_crs(bombus_shp))
+# concert bbox to sf polygon
+bbox_poly <- st_as_sfc(bbox)
+# crop shapefile using bounding box
+cropped_bombus_shp <- st_intersection(bombus_shp, bbox_poly)
 
 
-![Melanopygus saw the greatest emergence sensitivity, with mixtus, vosnesenskii, and griseocollis following.](Figures/SpeciesSpecificModel.png)
+# plotting!
+ggplot() +
+  geom_polygon(data=or, aes(x=lon, y=lat, group=group)) +
+  geom_sf(data = cropped_bombus_shp, aes(color = Species)) +
+  scale_color_viridis_d(name = "Species") + 
+  ggtitle("Bombus Species Observations Across Oregon") + 
+  labs(x = "longitude", y = "latitude") + 
+  scale_color_manual(
+    values = c("red", "white", "forestgreen", "violet"), # Custom colors for each species
+    name = "Species"
+  ) 
+```
+Map showing the average spring temperatures across Oregon, each point is a bee observation.
+
+
+Census Blocks Plot
+```{r Census Blocks Plot}
+
+census_shp <- st_read("Data/CensusBlockGroups/CensusBlockGroups.shp")
+census_csv <- read.csv("CensusBlockGroups.csv")
+
+ggplot() +
+  geom_polygon(data=or, aes(x=lon, y=lat, group=group), fill = "tan")
+
+census_shp <- census_shp %>%
+  mutate(pop_bin = cut(POP20, breaks = c(0, 3000, 4000,5000, 6000, Inf),
+                       labels = c("0-3k", "3k-4k","4k-5k", "5k-6k", "6k+"),
+                       include.lowest = TRUE))
+
+ggplot() +
+  geom_sf(data = census_shp, aes(fill = POP20)) + 
+  scale_fill_gradient(low="beige", high = "brown", name = "Population by Census Block") + 
+  
+  geom_sf(data = complete_bee_data, aes(color = springTemp)) +
+  scale_color_gradient(low="blue", high="red", name = "Avg Spring Temp °C (Feb-June)") + ggtitle("All Bee Locations with Census Blocks and Spring Temperature Info") + theme(plot.title = element_text(hjust = 0.3, vjust = 3)) + 
+  
+  xlab("lon") + ylab("lat") 
+
+```
+Map with average spring temperatures and population by Census Block across Oregon, each point is a bee observation.
+
+
+Climate plot:
+```{r climate plot}
+# Plotting the average spring temperatures where the bees were captured, and outlining the counties
+                            # and we can see generally where the populated areas are
+ggplot() +
+  geom_polygon(data=or, aes(x=lon, y=lat, group=group), color = "black", fill = "tan")+
+  geom_sf(data = complete_bee_data, aes(color = springTemp)) +
+  scale_color_gradient2(low = "white", 
+    mid = "blue", 
+    high = "red", 
+    midpoint = .02, name = "Temperature (°C)" ) + ggtitle("All Bee Locations with Average Spring (Feb-June) Temperatures (°C)") + theme(plot.title = element_text(hjust = 0.5)) + xlab("Longitude") + ylab("Latitude")
+
+
+
+```
+The three figures below showcases the predicted linear trend for spring temperature, urbanization, and species specific response. 
+
+
+Creating Temperature variables and checking linear model. (model1):
+```{r}
+complete_bee_data <- complete_bee_data %>%
+  rowwise() %>%
+  mutate(springTemp = mean(c_across(c("tmean_6", "tmean_7", 
+                                      "tmean_8", "tmean_9", "tmean_10")), na.rm = TRUE)) %>%
+  ungroup()
+
+anova(model1)
+
+summary(model1)
+```
+
+
+Spring Temperature vs DOY Visualization:
+```{r}
+
+tempDOY <- ggpredict(model1, terms = c("springTemp"))
+
+
+tempDOY_plot <- ggplot(tempDOY, aes(x = x, y = predicted)) +
+  geom_point(data = complete_bee_data, 
+             aes(x = scale(springTemp), y = DOY, color = "Observed Data"), 
+             alpha = 0.5) +
+  geom_line(aes(color = "Model Prediction"), linewidth = 1) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
+  scale_color_manual(values = c("Observed Data" = "green3", "Model Prediction" = "darkgreen")) +
+  labs(x = "Scaled Spring Temperature", y = "DOY", color = "Legend", fill = "Legend",
+       title = "                  Effect of Temperature on Day of Emergence") +
+  theme_minimal()
+
+#calculating slope 
+slope_tempDOY <- diff(tempDOY$predicted) / diff(tempDOY$x)
+print(slope_tempDOY)
+
+
+tempDOY_plot
+
+```
+Average peak Bombus spp. emerge earlier with increasing spring temperatures. Green line represents model prediction with 95% confidence interval. Green dots represent observed data. 
+
+
+Urbanization Level vs DOY Visualization:
+```{r}
+
+urbanizationDOY <- ggpredict(model1, terms = c("urbanizationLevel"))
+
+urbanizationDOY_plot <- ggplot(urbanizationDOY, aes(x = x, y = predicted)) +
+  geom_line(aes(group = 1), size = 1) +  
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), 
+                width = 0.2, size = 0.8, color = "darkgrey") +
+  geom_point(size = 3, color = "forestgreen") +
+  labs(x = "Urbanization Level", 
+       y = "Predicted DOY",
+       title = "                            Effect of Urbanization on Day of Emergence") +
+  theme_minimal() 
+
+
+urbanizationDOY_plot
+
+```
+Dense urban areas lead to an earlier average peak emergence when compared to rural areas. Green dots represent slopes for each urbanization level. Gray bars represent 95% confidence interval. 
+
+Species Species Figure:
+
+```{r}
+
+results <- data.frame(
+  species = character(),
+  slope = numeric(),
+  conf.low = numeric(),
+  conf.high = numeric(),
+  stringsAsFactors = FALSE
+)
+
+for (species_name in names(species_summaries)) {
+  coefficients <- species_summaries[[species_name]][["coefficients"]]
+  
+  if ("scale(springTemp)" %in% rownames(coefficients)) {
+    slope <- coefficients["scale(springTemp)", "Estimate"]
+    std_error <- coefficients["scale(springTemp)", "Std. Error"]
+    df <- coefficients["scale(springTemp)", "df"]
+    
+    t_critical <- qt(0.975, df = df)
+    conf.low <- slope - t_critical * std_error
+    conf.high <- slope + t_critical * std_error
+    
+    results <- rbind(
+      results,
+      data.frame(
+        species = species_name,
+        slope = slope,
+        conf.low = conf.low,
+        conf.high = conf.high,
+        stringsAsFactors = FALSE
+      )
+    )
+  } 
+}
+
+ggplot(results, aes(x = reorder(species, slope), y = slope)) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2, color = "gray50") +
+  geom_point(size = 3, color = "forestgreen") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red", size = 0.8) +
+  labs(
+    y = "Emergence Sensitivity (days/°C)",
+    x = "Species",
+    title = "                  Species-Specific Emergence Sensitivity to Temperature"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1) 
+  ) 
+
+```
+Melanopygus saw the greatest emergence sensitivity, with mixtus, vosnesenskii, and griseocollis following. Green dots represent slopes for each species. Black bars represent 95% confidence intervals for each estimate. Red dashed line at 0 represent no emergence sensitivity to temperature. 
+
+
+Summary stats for species specific response comparison:
+
+Mean DOY and total number of observations for all species. 
+```{r}
+doy_avg <- complete_bee_data %>% 
+  group_by(Species) %>% 
+  summarise(doy_avg = mean(DOY), 
+            observations = sum(n())) %>% 
+  arrange(doy_avg, desc = TRUE)
+
+doy_avg
+ 
+```
+
 
 V. Conclusion: 
 
-We found that more urbanized areas resulted in an earlier peak emergence, by around 15.8 days per °C. This is likely being caused by the Urban Heat Island Effect which causes warmer microclimates due to less green spaces and a higher concentration of concrete in more urbanized areas. The effect of temperature also causes earlier emergence dates, across all species, by around 8.5 days per °C. This lines up with our understanding of temperature as an environmental cue that regulates phenology, directly or through changes in plant phenological sensitivity.  As for the species-specific phenological sensitivity, Bombus species that have an earlier average peak emergence were more sensitive to the warming changes in temperature, the reliance on temperature could make early-season species more vulnerable to climate change with premature emergence that could cause a mismatch with floral resource availability. 
+We found that more urbanized areas resulted in an earlier peak emergence, by around 15.8 days per °C. This is likely caused by the Urban Heat Island Effect which causes warmer microclimates due to less green spaces and a higher concentration of concrete in more urbanized areas. The effect of temperature also causes earlier emergence dates, across all species, by around 8.5 days per °C (more specifics on model predictions can be found in the Bee_Analysis.rmd script). This lines up with our understanding of temperature as an environmental cue that regulates phenology, directly or through changes in plant phenological sensitivity. The effect of urbanization and temperature on bees might indirectly affecting them, as studies have shown that plant phenology is highly synchronized with temperature. Further research would need to be conducted assess the relationship between the plant the bee was found on, the climate, and the bees species itself. As for the species-specific phenological sensitivity, Bombus species that have an earlier average peak emergence were more sensitive to the warming changes in temperature, the reliance on temperature could make early-season species more vulnerable to climate change with premature emergence that could cause a mismatch with floral resource availability. This result aligns with our initial hypothesis as melanopygus, the earliest emerging species also is the most sensitive to temperature. As you move to later emerging Bombus species, the less sensitive to temperature they appear to be. 
 	
-Things that could be causing bias include the fact that urban areas are more populated and easier to access, so there might be an overestimation of the effects of urbanization due to the increased number of observations in urban areas. And there are more common species with more observations, for example Bombus vosnesenskii had 2,692 observations, Bombus mixtus had 545, Bombus melanopygus had 566, and Bombus griseocollis had 306. This means that we could be underestimating the effects on species like griseocollis and underestimating the effects of species like vosnesenskii. (Note: Our figure code can be found in Oregon_Bee_Map.Rmd and BombusModelFigures.Rmd)
-
+Things that could be causing bias include the fact that urban areas are more populated and easier to access, so there might be an overestimation of the effects of urbanization due to the increased number of observations in urban areas. We also have to consider, due to our usage of quantiles, just because something was labeled urban or rural, there is a chance it might not fit the true description of what a rural or urban environment looks like. The choice of creating categorical values for urbanization allowed us to easily test the two extremes, but possibly ignored what the true defined urbanization levels are for a given observation. Additionally, there are more common species with more observations: Bombus vosnesenskii had 2,695 observations, Bombus mixtus had 1549, Bombus melanopygus had 566, and Bombus griseocollis had 306. Because of the substantially lower observations for melanopygus and grisecollis, the possibility of skewing their data within the overall model was feasible. Though we created a species specific model to account for variations in observation, this wasn't taken into account within the overall model. More specifically, we could be underestimating the effects on species like griseocollis and overestimating the effects of species like vosnesenskii. 
 
 
 References 
