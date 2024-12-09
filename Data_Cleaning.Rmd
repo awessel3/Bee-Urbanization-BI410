@@ -5,7 +5,7 @@ date: "2024-11-07"
 ---
 
 ``` {r}
-#install.packages("lubridate")\
+#install.packages("lubridate")
 library(lubridate)
 library(tidyverse)
 library(sp)
@@ -69,15 +69,6 @@ calc_day_of_year <- function(date){
 
 filtered_bee_data <- mutate(filtered_bee_data, DOY = calc_day_of_year(Collection.Date))
 
-#rows_with_na <- rowSums(is.na(filtered_bee_data)) > 0
-#filtered_bee_data[rows_with_na, ]
-# row 8791 has Collection.Date of 2018--20
-  # dropping this row 
-# row 18851 had Collection.Date of 2019-6-31, this day doesn't exist allegedly there are only 30 days in june
-# the rest of the rows without a DOY value don't have a Collection.Date date
-
-#dropping all days missing a DOy value? Which is ~740 values 
-
 month <- seq(as.Date("2020-01-01"), 
              as.Date("2020-12-01"), 
              by = "1 month")
@@ -129,7 +120,7 @@ prism_set_dl_dir("prism_data")
 
 sub.tmean <- prism_archive_subset("tmean", "monthly", mon = 1:12)
 
-RS <- pd_stack(sub.tmean) ##raster file   # (prism_stack and ls_prism_data deprecated)
+RS <- pd_stack(sub.tmean) ##raster file  
 
 bee.test <- filtered_bee_data
 bee.spdf <-   SpatialPointsDataFrame(coords=bee.test[,c('longitude','latitude')], 
@@ -169,11 +160,9 @@ bee.dat.tmean <- pivot_wider(
   bee_long,
   names_from = tmean.month,
   values_from = value,
-  values_fn = mean # Or another aggregation function
+  values_fn = mean 
 )
 
-# pivot back to wide
-#bee.dat.tmean <- pivot_wider(bee_long, names_from=tmean.month, values_from=value, values_fn = mean) %>% dplyr::select(-c(var))
 print(bee.dat.tmean)
 dim(bee.dat.tmean)
 
@@ -189,16 +178,6 @@ summary(bee_long) # Summarize to check for NAs
 anyDuplicated(bee_long[, c("Species", "winter.year.prism", "tmean.month")]) # Check for duplicates in key columns
 
 sum(is.na(bee_data_wTemp)) 
-dim(bee_data_wTemp)
-dim(filtered_bee_data) #large difference in row numbers, why? 
-
-dim(filtered_bee_data)
-dim(bee.spdf)
-dim(bee.clim)
-dim(bee_long)
-dim(bee.dat.tmean)
-dim(bee_data_wTemp)
-
 
 ```
 
@@ -223,7 +202,6 @@ bee_with_census <- st_join(bee_sf, census_sf)
 dim(bee_with_census)
 
 saveRDS(bee_with_census, "Data/final_bee_dataset")
-# want to keep columns INTPTLAT, INTPTLON, COUNTY?, NAME?, POP20
 
 
 ```

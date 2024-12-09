@@ -102,9 +102,6 @@ ggplot() +
 # Climate plot
 ```{r climate plot}
 
-
-
-
 # Plotting the average spring temperatures where the bees were captured, and outlining the counties
                             # and we can see generally where the populated areas are
 ggplot() +
