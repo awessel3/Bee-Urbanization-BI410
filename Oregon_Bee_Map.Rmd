@@ -28,7 +28,7 @@ bombus_shp <- st_as_sf(complete_bee_data,
 )
 
 # Calculating the same average spring temperatures that we used for the model 
-complete_bee_data <- cropped_bombus_shp %>%
+complete_bee_data <- bombus_shp %>%
   rowwise() %>%
   mutate(springTemp = mean(c_across(c("tmean_6", "tmean_7", 
                                       "tmean_8", "tmean_9", "tmean_10")), na.rm = TRUE)) %>%

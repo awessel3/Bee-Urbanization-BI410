@@ -1,6 +1,12 @@
 ---
 title: "Final Write Up"
-output: pdf_document
+author: 
+  - Ava Wessel
+  - Mia Hanson
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
 date: "2024-12-08"
 ---
 
@@ -27,7 +33,7 @@ complete_bee_data <- read_rds("Data/final_bee_dataset")
 
 ```
 
-Note to reader: We had to combine four different R markdown scripts, so the addition of saving our models/datasets and rereading in the datasets was set up prior to combination. I guess it is still a good habit to have though. 
+Note to reader: We had to combine four different R markdown scripts, so the addition of saving our models/datasets and rereading in the datasets was set up prior to combination. I guess it is still a good habit to have though. Because of this, the code from the original scripts might differ slightly to get this file to properly knit. The overall function of this markdown is the same. 
 
 Effect of Urbanization and Temperature on Bombus spp. Emergence
 
@@ -50,11 +56,8 @@ The data that we be combined is the OBA dataset and merged it with US Census dat
 #Loading in OBA
 bee_data <- read.csv("OBA_2018-2023_combined_dataset_working.csv")
 
-head(bee_data)
-
 # want to just keep our species from the main dataframe
 filtered_bee_data <- bee_data[bee_data$Species %in% c("vosnesenskii", "melanopygus", "mixtus", "griseocollis"), ]
-colnames(filtered_bee_data)
 
 # want to keep Dec..Lat. and Dec..Long. and Collection.Date and Collection.Day.1
 filtered_bee_data <- filtered_bee_data %>%
@@ -122,18 +125,39 @@ dim(filtered_bee_data)
 ```
 
 
-# Adding in PRISM climate data 
+# Adding in PRISM climate data:
+
+Note: I could not for the life of me figure out how to bypass this knitting error without completely changing the code. I check to see if they were all numeric and they were, not really sure the solution. To see working code on the original markdown file, see Data_Cleaning.rmd. I included the code up until it stopped working and the execution halt error occurs. I included the error below: 
+Error in `FUN()`:
+! only defined on a data frame with all numeric-alike variables
+Backtrace:
+  1. ... %>% print(bee_long)
+  4. pillar:::print.tbl(., bee_long)
+  5. pillar:::print_tbl(...)
+  8. pillar:::format.tbl(...)
+  9. pillar:::format_tbl(...)
+     ...
+ 17. pillar:::ctl_new_pillar.tbl(controller, vector(), width, title = title)
+ 20. pillar:::max0(width)
+ 21. base::Summary.data.frame(`<tibble[,21]>`, na.rm = FALSE)
+ 22. base::lapply(...)
+ 23. base (local) FUN(X[[i]], ...)
+
+Quitting from lines 130-202 [unnamed-chunk-3] (Final_Writeup.Rmd)
+Execution halted
+
 ```{r}
-#Adding PRISM Data and calculating values for 'winter year' so that we take into account the months prior to the spring season that would be afffecting what we see
+#Adding PRISM Data and calculating values for 'winter year' so that we take into account the months prior to the spring season that would be affecting what we see.
 
 prism_set_dl_dir("prism_data")
 
-get_prism_monthlys(
- type = "tmean", 
- year=2016:2021,
- mon=1:12,
- keepZip = FALSE
- )
+# Had to comment out as it was printing all output in the pdf
+#get_prism_monthlys(
+# type = "tmean", 
+#  year=2016:2021,
+#  mon=1:12,
+#   keepZip = FALSE
+# )
 
 sub.tmean <- prism_archive_subset("tmean", "monthly", mon = 1:12)
 
@@ -145,56 +169,12 @@ bee.spdf <-   SpatialPointsDataFrame(coords=bee.test[,c('longitude','latitude')]
 
 bee.clim <- extract(RS, bee.spdf,  fun=mean, na.rm=TRUE, sp=TRUE) 
 bee.clim <- as.data.frame(bee.clim)
-head(bee.clim,2); dim(bee.clim)
 
+#...(rest of code in Data_Cleaning.rmd)
 
-bee_long <- pivot_longer(bee.clim, cols=starts_with("PRISM")) %>%
-  separate(col=name, sep="_", into=c("r1","var","class","res","dd","r2")) %>%
-  mutate(year.prism=as.numeric(str_sub(dd, 1, 4)),
-         month.prism=as.numeric(str_sub(dd, 5, 6)))%>%
-  dplyr::select(-c(r1,r2,latitude.1, longitude.1, dd))
-print(bee_long)
-dim(bee_long)
+# Read-in from original script due to knitting error 
+bee_data_wTemp <- read_rds("Data/bee_data_wTemp")
 
-bee_long <- bee_long %>%  
-  mutate(winter.year.prism = ifelse(month.prism>8, year.prism+1, year.prism)
-         ,winter.month.prism = ifelse(month.prism>8, month.prism-8, month.prism+4)
-         ,tmean.month = paste(var, winter.month.prism, sep="_")
-  ) %>% filter(winter.year.prism == winter.year) # filter to only the prism data from the same winter-year as the observation
-print(bee_long)
-dim(bee_long)
-
-bee_long <- bee_long %>% 
-  dplyr::select(-c(month.prism,winter.month.prism, year.prism,class))%>% 
-  print(bee_long)
-
-bee_long <- bee_long %>%
-  group_by(Species, winter.year.prism, tmean.month) %>%
-  mutate(row_id = row_number()) # Add a unique ID to prevent collapsing
-
-
-bee.dat.tmean <- pivot_wider(
-  bee_long,
-  names_from = tmean.month,
-  values_from = value,
-  values_fn = mean 
-)
-
-print(bee.dat.tmean)
-dim(bee.dat.tmean)
-
-bee.data <- bee.dat.tmean
-print(bee.data)
-
-bee_data_wTemp <-  bee.data %>%
-  rowwise()%>%
-  mutate(temp=mean(c_across(tmean_1:tmean_9))) %>% dplyr::select(-c(var, Year.1))
-
-dim(bee_long) # Check the size of the dataset before pivoting
-summary(bee_long) # Summarize to check for NAs
-anyDuplicated(bee_long[, c("Species", "winter.year.prism", "tmean.month")]) # Check for duplicates in key columns
-
-sum(is.na(bee_data_wTemp)) 
 
 ```
 
@@ -270,7 +250,7 @@ dat <- data.frame(
   species = complete_bee_data$Species,
   pop = scale(complete_bee_data$POP20)
 )
-na.omit(dat)
+
 sum(is.na(dat))
 dat$springTemp <- as.numeric(dat$springTemp)
 
@@ -342,7 +322,7 @@ bombus_shp <- st_as_sf(complete_bee_data,
 )
 
 # Calculating the same average spring temperatures that we used for the model 
-complete_bee_data <- cropped_bombus_shp %>%
+complete_bee_data <- bombus_shp %>%
   rowwise() %>%
   mutate(springTemp = mean(c_across(c("tmean_6", "tmean_7", 
                                       "tmean_8", "tmean_9", "tmean_10")), na.rm = TRUE)) %>%
@@ -380,7 +360,7 @@ ggplot() +
     name = "Species"
   ) 
 ```
-Map showing the average spring temperatures across Oregon, each point is a bee observation.
+Figure 1: Map showing the average spring temperatures across Oregon, each point is a bee observation.
 
 
 Census Blocks Plot
@@ -389,8 +369,8 @@ Census Blocks Plot
 census_shp <- st_read("Data/CensusBlockGroups/CensusBlockGroups.shp")
 census_csv <- read.csv("CensusBlockGroups.csv")
 
-ggplot() +
-  geom_polygon(data=or, aes(x=lon, y=lat, group=group), fill = "tan")
+#ggplot() +
+#  geom_polygon(data=or, aes(x=lon, y=lat, group=group), fill = "tan")
 
 census_shp <- census_shp %>%
   mutate(pop_bin = cut(POP20, breaks = c(0, 3000, 4000,5000, 6000, Inf),
@@ -407,26 +387,10 @@ ggplot() +
   xlab("lon") + ylab("lat") 
 
 ```
-Map with average spring temperatures and population by Census Block across Oregon, each point is a bee observation.
+Figure 2: Map with average spring temperatures and population by Census Block across Oregon, each point is a bee observation.
 
 
-Climate plot:
-```{r climate plot}
-# Plotting the average spring temperatures where the bees were captured, and outlining the counties
-                            # and we can see generally where the populated areas are
-ggplot() +
-  geom_polygon(data=or, aes(x=lon, y=lat, group=group), color = "black", fill = "tan")+
-  geom_sf(data = complete_bee_data, aes(color = springTemp)) +
-  scale_color_gradient2(low = "white", 
-    mid = "blue", 
-    high = "red", 
-    midpoint = .02, name = "Temperature (°C)" ) + ggtitle("All Bee Locations with Average Spring (Feb-June) Temperatures (°C)") + theme(plot.title = element_text(hjust = 0.5)) + xlab("Longitude") + ylab("Latitude")
-
-
-
-```
 The three figures below showcases the predicted linear trend for spring temperature, urbanization, and species specific response. 
-
 
 Creating Temperature variables and checking linear model. (model1):
 ```{r}
@@ -467,7 +431,7 @@ print(slope_tempDOY)
 tempDOY_plot
 
 ```
-Average peak Bombus spp. emerge earlier with increasing spring temperatures. Green line represents model prediction with 95% confidence interval. Green dots represent observed data. 
+Figure 3: Average peak Bombus spp. emerge earlier with increasing spring temperatures. Green line represents model prediction with 95% confidence interval. Green dots represent observed data. 
 
 
 Urbanization Level vs DOY Visualization:
@@ -489,9 +453,9 @@ urbanizationDOY_plot <- ggplot(urbanizationDOY, aes(x = x, y = predicted)) +
 urbanizationDOY_plot
 
 ```
-Dense urban areas lead to an earlier average peak emergence when compared to rural areas. Green dots represent slopes for each urbanization level. Gray bars represent 95% confidence interval. 
+Figure 4: Dense urban areas lead to an earlier average peak emergence when compared to rural areas. Green dots represent slopes for each urbanization level. Gray bars represent 95% confidence interval. 
 
-Species Species Figure:
+Species Specific Figure:
 
 ```{r}
 
@@ -503,8 +467,8 @@ results <- data.frame(
   stringsAsFactors = FALSE
 )
 
-for (species_name in names(species_summaries)) {
-  coefficients <- species_summaries[[species_name]][["coefficients"]]
+for (species_name in names(model_summaries)) {
+  coefficients <- model_summaries[[species_name]][["coefficients"]]
   
   if ("scale(springTemp)" %in% rownames(coefficients)) {
     slope <- coefficients["scale(springTemp)", "Estimate"]
@@ -543,7 +507,7 @@ ggplot(results, aes(x = reorder(species, slope), y = slope)) +
   ) 
 
 ```
-Melanopygus saw the greatest emergence sensitivity, with mixtus, vosnesenskii, and griseocollis following. Green dots represent slopes for each species. Black bars represent 95% confidence intervals for each estimate. Red dashed line at 0 represent no emergence sensitivity to temperature. 
+Figure 5: Melanopygus saw the greatest emergence sensitivity, with mixtus, vosnesenskii, and griseocollis following. Green dots represent slopes for each species. Black bars represent 95% confidence intervals for each estimate. Red dashed line at 0 represent no emergence sensitivity to temperature. 
 
 
 Summary stats for species specific response comparison:
@@ -568,7 +532,7 @@ We found that more urbanized areas resulted in an earlier peak emergence, by aro
 Things that could be causing bias include the fact that urban areas are more populated and easier to access, so there might be an overestimation of the effects of urbanization due to the increased number of observations in urban areas. We also have to consider, due to our usage of quantiles, just because something was labeled urban or rural, there is a chance it might not fit the true description of what a rural or urban environment looks like. The choice of creating categorical values for urbanization allowed us to easily test the two extremes, but possibly ignored what the true defined urbanization levels are for a given observation. Additionally, there are more common species with more observations: Bombus vosnesenskii had 2,695 observations, Bombus mixtus had 1549, Bombus melanopygus had 566, and Bombus griseocollis had 306. Because of the substantially lower observations for melanopygus and grisecollis, the possibility of skewing their data within the overall model was feasible. Though we created a species specific model to account for variations in observation, this wasn't taken into account within the overall model. More specifically, we could be underestimating the effects on species like griseocollis and overestimating the effects of species like vosnesenskii. 
 
 
-References 
+VI. References:
 
 Ahrné, K., Bengtsson, J., & Elmqvist, T. (2009). Bumble Bees (Bombus spp) along a Gradient of Increasing Urbanization. PLoS ONE, 4(5), e5574. https://doi.org/10.1371/journal.pone.0005574
 McCabe, L. M., Aslan, C. E., & Cobb, N. S. (2022). Decreased bee emergence along an elevation gradient: Implications for climate change revealed by a transplant experiment. Ecology, 103(2), e03598. https://doi.org/10.1002/ecy.3598

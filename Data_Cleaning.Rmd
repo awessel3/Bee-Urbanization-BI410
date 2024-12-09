@@ -179,6 +179,9 @@ anyDuplicated(bee_long[, c("Species", "winter.year.prism", "tmean.month")]) # Ch
 
 sum(is.na(bee_data_wTemp)) 
 
+#Line added due to knitting error in final write-up
+saveRDS(bee_data_wTemp, "Data/bee_data_wTemp")
+
 ```
 
 # Census Block Data
